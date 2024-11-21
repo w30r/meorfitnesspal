@@ -3,8 +3,8 @@ import { Ellipsis } from "lucide-react";
 import { CircularProgress } from "@nextui-org/progress";
 export default function MacroGoals({ carbs, protein, fats }) {
   return (
-    <div className="bg-white p-4 mt-10 rounded-xl outline-1 outline outline-black/10 shadow-md mb-4">
-      <div className="flex  p-2 justify-between items-center ">
+    <div className="bg-white px-4 py-3 mt-3 rounded-xl outline-1 outline outline-black/10 shadow-md mb-4">
+      <div className="flex p-1 justify-between items-center ">
         <h1 className="text-xl">Macros</h1>
         <Ellipsis size={18} />
       </div>
