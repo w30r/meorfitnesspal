@@ -14,14 +14,16 @@ import Footer from "./components/Footer";
 import MealHeader from "./components/MealHeader";
 import MealContent from "./components/MealContent";
 import CalorieGoal from "./components/CalorieGoal";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [carbs, setCarbs] = useState(0);
   const [protein, setProtein] = useState(0);
   const [fats, setFats] = useState(0);
   const [goals, setGoals] = useState({
-    carbs: 20,
-    protein: 50,
+    carbs: 30,
+    protein: 40,
     fats: 30,
     calories: 1600,
   });
@@ -64,7 +66,11 @@ export default function Home() {
   return (
     <div className="bg-white h-screen w-screen overflow-auto text-black/75 text-sm font-semibold py-12 px-8">
       <div className="bg-white/30  z-10 absolute top-0 backdrop-blur-md left-0  w-full h-[80px] p-4  flex justify-between items-center mb-8">
-        <Equal strokeWidth={1.75} size={20} />
+        <Equal
+          strokeWidth={1.75}
+          size={20}
+          onClick={() => router.push("/settings")}
+        />
         <div className="flex justify-center items-center gap-2">
           <ChevronLeft strokeWidth={1.75} size={20} />
           <p className="text-xs">Today</p>
