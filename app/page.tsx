@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getFoodLogbyDate, getGoalData } from "./actions";
 import KadUtama from "@/components/kadutama";
-import { Card } from "@/components/ui/card";
 import { Label, ProgressBar } from "@heroui/react";
 
 export interface FoodEntry {
@@ -44,7 +43,7 @@ function formatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatShortDate(dateStr: string) {
+export function formatShortDate(dateStr: string) {
   const [year, month, day] = dateStr.split("-");
   const months = [
     "Jan",
@@ -169,6 +168,7 @@ export default function Home() {
         <p>Loading...</p>
       ) : (
         <KadUtama
+          date={formatDate(today)}
           p={foodLog?.totalProtein || 0}
           pgoal={goal?.protein || 0}
           c={foodLog?.totalCarbs || 0}

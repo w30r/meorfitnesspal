@@ -14,12 +14,16 @@ interface FoodLog {
 
 export default async function Memain() {
   const data = await getFoodLogbyDate("2026-04-01");
+  const today = new Date();
+  const todayStr = today.toDateString();
   console.log("🚀 ~ Memain ~ data:", data);
   return (
     <div className="flex flex-col justify-center items-center py-12">
       <div>
         <h1 className="text-3xl font-bold mb-4">hello</h1>
       </div>
+
+      <div>{todayStr}</div>
 
       <main className="flex flex-col gap-4">
         <h1 className=" px-2 py-1 w-1/3 text-center -mb-4 bg-primary text-black rounded-full">

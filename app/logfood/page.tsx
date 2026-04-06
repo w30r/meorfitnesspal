@@ -22,7 +22,7 @@ interface FormData {
 
 export default function LogPage() {
   const today = new Date();
-  const formattedDate = today.toISOString().split("T")[0];
+  const formattedDate = today.toLocaleDateString("en-CA");
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     foodName: "",
@@ -57,7 +57,6 @@ export default function LogPage() {
     try {
       setFormData({
         ...formData,
-        date: new Date().toISOString(),
         meal: formData.meal || "NONE SELECTED", // Ensure meal is set to a default value if not provided
       });
 
@@ -83,7 +82,7 @@ export default function LogPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background py-16 px-8">
       <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-white">
-        Log Food {formData.meal}
+        Log Food {formData.date}
       </h1>
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
         <div>
