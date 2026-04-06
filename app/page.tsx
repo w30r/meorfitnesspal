@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getFoodLogbyDate, getGoalData } from "./actions";
 import KadUtama from "@/components/kadutama";
 import { Card } from "@/components/ui/card";
+import { Label, ProgressBar } from "@heroui/react";
 
 export interface FoodEntry {
   _id: string;
@@ -29,6 +30,13 @@ export interface FoodLogResponse {
   totalFats: number;
 }
 
+interface Goal {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
 function formatDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -36,11 +44,31 @@ function formatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function formatShortDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-");
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  return `${day} ${months[parseInt(month) - 1]} ${year}`;
+}
+
 export default function Home() {
   const [today, setToday] = useState(new Date());
-  const [goal, setGoal] = useState<any>(null);
-  const [isGoalLoading, setIsGoalLoading] = useState(true);
+  const [goal, setGoal] = useState<Goal | null>(null);
   const [foodLog, setFoodLog] = useState<FoodLogResponse | null>(null);
+  const [isGoalLoading, setIsGoalLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,11 +112,11 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-background dark:bg-background py-20 px-8">
-      <header className="text-4xl font-bold mb-8 text-foreground">
+    <div className="flex flex-col items-center min-h-screen bg-background dark:bg-background py-8 px-8">
+      <header className="text-xl font-bold mb-8 text-foreground">
         MeorFitnessPal
       </header>
-      <div className=" mb-4 flex items-center justify-between min-w-screen px-8 h-4">
+      <div className=" mb-12 bg-card flex items-center justify-between min-w-screen px-8 h-auto py-4 rounded-xl">
         {/* Go to previous day */}
         <Button variant="outline" onClick={handlePrevDay}>
           <h1>{"<"}</h1>
@@ -96,13 +124,46 @@ export default function Home() {
         <h1>
           {formatDate(today) === formatDate(new Date())
             ? "Today"
-            : formatDate(today)}
+            : formatShortDate(formatDate(today))}
         </h1>
         {/* Go to next day */}
         <Button variant="outline" onClick={handleNextDay}>
           <h1>{">"}</h1>
         </Button>
       </div>
+
+      {foodLog?.totalCalories && goal ? (
+        <div className="flex flex-col items-center justify-center mb-2 w-full">
+          <ProgressBar
+            size="lg"
+            value={(foodLog?.totalCalories / goal?.calories) * 100}
+          >
+            <ProgressBar.Track className="bg-card">
+              <ProgressBar.Fill />
+            </ProgressBar.Track>
+            <Label>
+              Calories
+              <p className="text-xs text-white/40 -my-1">
+                {foodLog?.totalCalories} out of {goal?.calories}
+              </p>
+            </Label>
+            <ProgressBar.Output />
+          </ProgressBar>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center mb-2 w-full">
+          <ProgressBar size="lg" value={0}>
+            <ProgressBar.Track className="bg-card">
+              <ProgressBar.Fill />
+            </ProgressBar.Track>
+            <Label>
+              Calories
+              <p className="text-xs text-white/40 -my-1">0 out of 0</p>
+            </Label>
+            <ProgressBar.Output />
+          </ProgressBar>
+        </div>
+      )}
 
       {isGoalLoading ? (
         <p>Loading...</p>
@@ -117,23 +178,44 @@ export default function Home() {
         />
       )}
 
-      <div className="flex-1 overflow-auto w-screen px-4 ">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {foodLog?.logs?.map((item: any) => (
-          <Card
-            className="flex flex-col items-start justify-center bg-card text-foreground rounded-xl px-4 py-2 font-bold gap-1 m-4"
-            key={item._id}
-          >
-            <h1>{item.foodName}</h1>
-            <h1>
-              <span className="text-success">{item.protein}P</span>/
-              <span className="text-destructive">{item.carbs}C</span>/
-              <span className="text-warning">{item.fats}F</span>
-            </h1>
-            <p>({item.calories} kcal)</p>
-          </Card>
-        ))}
-      </div>
+      {/* <div className="flex-1 overflow-auto w-screen px-8 ">
+        <h1 className="">Breakfast</h1>
+        {foodLog?.logs
+          ?.filter((item) => item.meal === "Breakfast")
+          .map((item: FoodEntry) => (
+            <Card
+              className="flex flex-col items-start justify-center bg-pink-500/20 text-foreground rounded-xl px-4 py-2 font-bold gap-1"
+              key={item._id}
+            >
+              <h1>{item.foodName}</h1>
+              <h1>
+                <span className="text-success">{item.protein}P</span>/
+                <span className="text-destructive">{item.carbs}C</span>/
+                <span className="text-warning">{item.fats}F</span>
+              </h1>
+              <p>({item.calories} kcal)</p>
+              <p>{item.meal} Meal</p>
+            </Card>
+          ))}
+        <h1>Lunch</h1>
+        {foodLog?.logs
+          ?.filter((item) => item.meal === "Lunch")
+          .map((item: FoodEntry) => (
+            <Card
+              className="flex flex-col items-start justify-center bg-pink-500/20 text-foreground rounded-xl px-4 py-2 font-bold gap-1"
+              key={item._id}
+            >
+              <h1>{item.foodName}</h1>
+              <h1>
+                <span className="text-success">{item.protein}P</span>/
+                <span className="text-destructive">{item.carbs}C</span>/
+                <span className="text-warning">{item.fats}F</span>
+              </h1>
+              <p>({item.calories} kcal)</p>
+              <p>{item.meal} Meal</p>
+            </Card>
+          ))}
+      </div> */}
 
       <div className="flex space-x-4 mt-8">
         <Link href="/logfood">

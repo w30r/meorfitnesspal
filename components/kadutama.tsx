@@ -23,7 +23,7 @@ export default function KadUtama(props: {
   const { k, p, c, f, kgoal, pgoal, cgoal, fgoal } = props;
 
   return (
-    <div className="uppercase bg-primary p-8 rounded-lg shadow-lg min-w-full h-auto text-background">
+    <div className="uppercase bg-primary p-8 rounded-xl shadow-lg min-w-full h-auto text-background">
       <div className="bg-pink-400/0 flex justify-around w-full lowercase">
         {/* PROTEIN CIRCLE */}
         <div className="flex flex-col items-center justify-center text-center w-1/3 ">

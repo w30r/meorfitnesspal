@@ -36,6 +36,7 @@ export default function LogPage() {
   });
 
   const handleChange = (e: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     target: { name: keyof FormData; value: any };
   }) => {
     setFormData({
@@ -90,7 +91,11 @@ export default function LogPage() {
             Meal
           </label>
           {/* <MealCombobox onValueChange={handleChange} /> */}
-          <NativeSelect>
+          <NativeSelect
+            name="meal"
+            value={formData.meal}
+            onChange={handleChange}
+          >
             <NativeSelectOption value="">Select meal</NativeSelectOption>
             <NativeSelectOption value="Breakfast">Breakfast</NativeSelectOption>
             <NativeSelectOption value="Lunch">Lunch</NativeSelectOption>
