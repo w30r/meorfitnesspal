@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { MealCombobox } from "@/components/mealcombobox";
 import { saveFoodLog } from "../actions";
 import { useRouter } from "next/navigation";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 
 interface FormData {
   foodName: string;
@@ -86,7 +89,14 @@ export default function LogPage() {
           <label htmlFor="meal" className="text-lg font-medium mb-2">
             Meal
           </label>
-          <MealCombobox onValueChange={handleChange} />
+          {/* <MealCombobox onValueChange={handleChange} /> */}
+          <NativeSelect>
+            <NativeSelectOption value="">Select meal</NativeSelectOption>
+            <NativeSelectOption value="Breakfast">Breakfast</NativeSelectOption>
+            <NativeSelectOption value="Lunch">Lunch</NativeSelectOption>
+            <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
+            <NativeSelectOption value="Etc">Etc</NativeSelectOption>
+          </NativeSelect>
         </div>
         <div>
           <label htmlFor="foodName" className="text-lg font-medium mb-2">
