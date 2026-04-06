@@ -11,11 +11,11 @@ if (!uri) {
 const client = new MongoClient(uri);
 
 // Function to connect to MongoDB
-export async function connectToDatabase() {
+export async function connectToDatabase(dbname: string) {
   try {
     await client.connect();
-    console.log("Connected to MongoDB");
-    return client.db();
+    // console.log("Connected to MongoDB");
+    return client.db(dbname);
   } catch (error) {
     console.error("Failed to connect to MongoDB", error);
     throw error;
@@ -25,9 +25,9 @@ export async function connectToDatabase() {
 // Function to fetch data from a collection
 export async function fetchData(collectionName: string, query: any = {}) {
   try {
-    const db = await connectToDatabase();
+    const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection(collectionName);
-    const result = await collection.find({}).limit(8).toArray();
+    const result = await collection.find(query).limit(8).toArray();
     return result;
   } catch (error) {
     console.error("Failed to fetch data", error);
@@ -38,7 +38,7 @@ export async function fetchData(collectionName: string, query: any = {}) {
 // Function to insert data into a collection
 export async function insertData(collectionName: string, data: any) {
   try {
-    const db = await connectToDatabase();
+    const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection(collectionName);
     const result = await collection.insertOne(data);
     return result.insertedId;
@@ -55,7 +55,7 @@ export async function updateData(
   update: any,
 ) {
   try {
-    const db = await connectToDatabase();
+    const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection(collectionName);
     const result = await collection.updateOne(filter, update);
     return result.modifiedCount;
@@ -68,7 +68,7 @@ export async function updateData(
 // Function to delete data from a collection
 export async function deleteData(collectionName: string, filter: any) {
   try {
-    const db = await connectToDatabase();
+    const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection(collectionName);
     const result = await collection.deleteOne(filter);
     return result.deletedCount;
