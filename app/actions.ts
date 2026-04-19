@@ -1,6 +1,8 @@
 "use server";
 
+import { ObjectId } from "mongodb";
 import { connectToDatabase } from "./lib/mongodb";
+import { revalidatePath } from "next/cache";
 
 export interface FoodEntry {
   _id: string;
@@ -23,7 +25,7 @@ export interface FoodLogResponse {
   totalFats: number;
 }
 
-interface FoodLog {
+export interface FoodLog {
   foodName: string;
   servingSize: string;
   calories: number;
@@ -34,7 +36,18 @@ interface FoodLog {
   meal: string;
 }
 
-export async function saveFoodLog(foodLog: FoodLog) {
+interface FormData {
+  foodName: string;
+  servingSize: number;
+  calories: number;
+  carbs: number;
+  protein: number;
+  fats: number;
+  date: string;
+  meal: string;
+}
+
+export async function saveFoodLog(foodLog: FormData) {
   try {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
@@ -216,6 +229,24 @@ export async function getFoodLogbyDate(date: string) {
     };
   } catch (error) {
     console.error("Failed to get food log by date", error);
+    throw error;
+  }
+}
+
+// delete meal by ID
+export async function deleteMealById(mealId: string) {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("foodlog");
+
+    const result = await collection.deleteOne({ _id: new ObjectId(mealId) });
+
+    // This clears the cache and fetches fresh data for the food logs page
+    revalidatePath("/food-logs/[date]", "page");
+
+    return result.deletedCount;
+  } catch (error) {
+    console.error("Failed to delete meal by ID", error);
     throw error;
   }
 }

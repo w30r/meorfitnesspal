@@ -6,13 +6,7 @@ import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { getGoalData, updateMacrosAndCaloriesGoal } from "../actions";
-import {
-  RadioGroup,
-  Radio,
-  Label,
-  DescriptionRoot,
-  Description,
-} from "@heroui/react";
+import { RadioGroup, Radio, Label, DescriptionRoot } from "@heroui/react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 
@@ -55,11 +49,10 @@ export default function GoalPage() {
     targetCarbs: 0,
     targetProtein: 0,
     targetFats: 0,
-    goalType: "",
   });
-  const [proteinratio, setProteinratio] = useState(0);
-  const [carbratio, setCarbratio] = useState(0);
-  const [fatratio, setFatRatio] = useState(0);
+  const [proteinRatio, setProteinratio] = useState(0);
+  const [carbRatio, setCarbratio] = useState(0);
+  const [fatRatio, setFatRatio] = useState(0);
 
   useEffect(() => {
     if (plan === "optimal") {
@@ -80,22 +73,32 @@ export default function GoalPage() {
   useEffect(() => {
     const fetchGoalData = async () => {
       const goalData = await getGoalData();
+      console.log("🚀 ~ fetchGoalData ~ goalData:", goalData);
       if (goalData) {
         setFormData({
           ...formData,
-          targetCalories: goalData.calories,
-          targetCarbs: goalData.carbs,
-          targetProtein: goalData.protein,
-          targetFats: goalData.fats,
+          targetCalories: goalData[0].calories,
+          targetCarbs: goalData[0].carbs,
+          targetProtein: goalData[0].protein,
+          targetFats: goalData[0].fats,
         });
         setIsLoading(false);
       }
     };
 
+    const calculateRatios = () => {
+      setCarbratio((formData.targetCarbs / formData.targetCalories) * 100);
+      setProteinratio((formData.targetProtein / formData.targetCalories) * 100);
+      setFatRatio((formData.targetFats / formData.targetCalories) * 100);
+    };
+
+    console.log("🚀 ~ fetchGoalData ~ formData:", formData);
     fetchGoalData();
+    calculateRatios();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (e: { target: { name: any; value: any } }) => {
+  const handleChange = (e: { target: { name: string; value: number } }) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -116,9 +119,8 @@ export default function GoalPage() {
     // Update the goal data
     await updateMacrosAndCaloriesGoal(
       formData.targetCalories as number,
-      ((proteinratio * formData.targetCalories) / 4) as number,
-      ((carbratio * formData.targetCarbs) / 4) as number,
-      // formData.targetCarbs,
+      formData.targetProtein,
+      formData.targetCarbs,
       formData.targetFats,
     );
 
@@ -130,15 +132,15 @@ export default function GoalPage() {
   const targetCarbs = formData.targetCarbs ? formData.targetCarbs : 0;
   const targetFats = formData.targetFats ? formData.targetFats : 0;
 
-  const limitedMacros = calculateMacros(
-    totalCalories,
-    targetProtein,
-    targetCarbs,
-    targetFats,
-  );
+  // const limitedMacros = calculateMacros(
+  //   totalCalories,
+  //   targetProtein,
+  //   targetCarbs,
+  //   targetFats,
+  // );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background dark:bg-background py-16 px-8 transition-all duration-300">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background dark:bg-background py-16 px-8 transition-all duration-300 md:px-64">
       {isLoading ? (
         <h1>Loading...</h1>
       ) : (
@@ -148,15 +150,15 @@ export default function GoalPage() {
               <p>back</p>
             </Link>
             Set Goal
-            <h2 className="text-xs">proteinratio: {proteinratio}</h2>
-            <h2 className="text-xs">carbratio: {carbratio}</h2>
-            <h2 className="text-xs">fatratio: {fatratio}</h2>
+            <h2 className="text-xs">proteinratio: {proteinRatio}</h2>
+            <h2 className="text-xs">carbratio: {carbRatio}</h2>
+            <h2 className="text-xs">fatratio: {fatRatio}</h2>
           </div>
           <form
             onSubmit={handleSubmit}
             className="flex flex-col space-y-2 flex-1"
           >
-            <div>
+            <div className="flex flex-col">
               <label
                 htmlFor="targetCalories"
                 className="text-lg font-medium mb-2"
@@ -168,11 +170,11 @@ export default function GoalPage() {
                 id="targetCalories"
                 name="targetCalories"
                 value={formData.targetCalories}
-                onChange={handleChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2 mb-4"
+                onChange={() => handleChange}
+                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2 mb-4 w-24 text-center"
               />
             </div>
-            <div className="flex flex-col gap-4 bg-accent rounded-3xl p-4 pb-6 outline-2 outline-primary">
+            <div className="flex flex-col gap-4 bg-secondary rounded-3xl p-4 pb-6 outline-2 outline-primary">
               <Label className="font-bold text-xl underline">
                 Choose Macro Plan
               </Label>
@@ -218,14 +220,15 @@ export default function GoalPage() {
                 className="text-lg font-medium mb-2"
               >
                 Target Protein (
-                {((proteinratio * formData.targetCalories) / 4).toFixed(1)}g)
+                {((proteinRatio * formData.targetCalories) / 4).toFixed(1)}g)
               </label>
               <Slider
+                defaultValue={[proteinRatio]}
                 disabled
                 min={0}
-                max={1}
+                max={0.5}
                 step={0.1}
-                value={[proteinratio]}
+                value={[proteinRatio]}
                 // onValueChange={(value) =>
                 //   handleSliderChange("targetProtein", value[0])
                 // }
@@ -235,14 +238,15 @@ export default function GoalPage() {
             <div>
               <label htmlFor="targetCarbs" className="text-lg font-medium mb-2">
                 Target Carbs (
-                {((carbratio * formData.targetCalories) / 4).toFixed(1)}g)
+                {((carbRatio * formData.targetCalories) / 4).toFixed(1)}g)
               </label>
               <Slider
+                defaultValue={[carbRatio]}
                 disabled
                 min={0}
-                max={1}
+                max={0.5}
                 step={1}
-                value={[carbratio]}
+                value={[carbRatio]}
                 onValueChange={(value) =>
                   handleSliderChange("targetCarbs", value[0])
                 }
@@ -253,14 +257,15 @@ export default function GoalPage() {
             <div>
               <label htmlFor="targetFats" className="text-lg font-medium mb-2">
                 Target Fats (
-                {((fatratio * formData.targetCalories) / 9).toFixed(1)}g)
+                {((fatRatio * formData.targetCalories) / 9).toFixed(1)}g)
               </label>
               <Slider
+                defaultValue={[fatRatio]}
                 disabled
                 min={0}
-                max={1}
+                max={0.5}
                 step={1}
-                value={[fatratio]}
+                value={[fatRatio]}
                 onValueChange={(value) =>
                   handleSliderChange("targetFats", value[0])
                 }

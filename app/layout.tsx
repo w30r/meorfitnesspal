@@ -38,7 +38,12 @@ export default function RootLayout({
         "dark",
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <header className="text-xl font-bold mb-8 text-foreground text-center mt-12">
+          MeorFitnessPal
+        </header>
+        {children}
+      </body>
     </html>
   );
 }

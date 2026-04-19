@@ -2,130 +2,100 @@ import { ProgressCircle } from "@heroui/react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-export default function KadUtama(props: {
-  k?: number;
+interface MacroCircleProps {
+  label: string;
+  current: number;
+  goal: number;
+  color: "success" | "danger" | "warning";
+}
+
+// Internal sub-component to keep things tidy
+const MacroCircle = ({ label, current, goal, color }: MacroCircleProps) => {
+  const percentage = goal > 0 ? (current / goal) * 100 : 0;
+
+  return (
+    <div className="flex flex-col items-center justify-center text-center w-full">
+      <ProgressCircle
+        aria-label={label}
+        value={percentage}
+        size="lg"
+        color={color}
+        className="drop-shadow-sm"
+      >
+        <ProgressCircle.Track className="size-14">
+          <ProgressCircle.TrackCircle
+            className="stroke-muted/30"
+            strokeWidth={3}
+          />
+          <ProgressCircle.FillCircle strokeWidth={3} />
+        </ProgressCircle.Track>
+      </ProgressCircle>
+
+      <div className="mt-3 space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-lg font-black leading-none">
+          {current.toFixed(1)}
+          <span className="text-[10px] font-medium ml-0.5">g</span>
+        </p>
+        <p
+          className={cn(
+            "text-[10px] font-medium px-1.5 py-0.5 rounded-full inline-block",
+            percentage > 100
+              ? "bg-destructive/10 text-destructive"
+              : "bg-secondary text-muted-foreground",
+          )}
+        >
+          {percentage.toFixed(0)}%
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default function KadUtama({
+  p = 0,
+  c = 0,
+  f = 0,
+  pgoal = 1, // Default to 1 to avoid division by zero
+  cgoal = 1,
+  fgoal = 1,
+  date,
+}: {
   p?: number;
   c?: number;
   f?: number;
-  kgoal?: number;
   pgoal?: number;
   cgoal?: number;
   fgoal?: number;
   date?: string;
 }) {
-  const { k, p, c, f, kgoal, pgoal, cgoal, fgoal, date } = props;
-
   return (
-    <div className="uppercase bg-primary p-8 rounded-xl shadow-lg min-w-full h-auto text-background">
-      <Link href={`/foodlogs/${date}`}>
-        <div className="bg-pink-400/0 flex justify-around w-full lowercase">
-          {/* PROTEIN CIRCLE */}
-          <div className="flex flex-col items-center justify-center text-center w-1/3 ">
-            <ProgressCircle
-              aria-label="Protein"
-              value={p && pgoal ? (p / pgoal) * 100 : 0}
-              size="lg"
-              color="success"
-              className=""
-            >
-              <ProgressCircle.Track className="size-12">
-                <ProgressCircle.TrackCircle className="stroke-background/50" />
-                <ProgressCircle.FillCircle />
-              </ProgressCircle.Track>
-            </ProgressCircle>
-            <p className="text-background w-full mt-2 uppercase">Protein</p>
-            <p className="text-background/50 w-full">
-              {p && pgoal ? ((p / pgoal) * 100).toFixed(2) : 0}%
-            </p>
-            <p className="text-background w-full">{p} g</p>
-          </div>
-          {/* CARBS CIRCLE */}
-          <div className="flex flex-col items-center justify-center text-center w-1/3">
-            <ProgressCircle
-              aria-label="Carbs"
-              value={c && cgoal ? (c / cgoal) * 100 : 0}
-              size="lg"
-              color="danger"
-            >
-              <ProgressCircle.Track className="size-12">
-                <ProgressCircle.TrackCircle className="stroke-background/50" />
-                <ProgressCircle.FillCircle />
-              </ProgressCircle.Track>
-            </ProgressCircle>
-            <p className="text-background w-full mt-2 uppercase">Carbs</p>
-            <p
-              className={
-                c && cgoal
-                  ? cn("text-background/50 w-full", {
-                      "text-red-500": (c / cgoal) * 100 > 100,
-                    })
-                  : "text-background/50 w-full"
-              }
-            >
-              {c && cgoal ? ((c / cgoal) * 100).toFixed(2) : 0}%
-            </p>
-            <p className="text-background w-full">{c} g</p>
-          </div>
-          {/* FATS CIRCLE */}
-          <div className="flex flex-col items-center justify-center text-center w-1/3">
-            <ProgressCircle
-              aria-label="Fats"
-              value={f && fgoal ? (f / fgoal) * 100 : 0}
-              size="lg"
-              color="warning"
-            >
-              <ProgressCircle.Track className="size-12">
-                <ProgressCircle.TrackCircle className="stroke-background/50" />
-                <ProgressCircle.FillCircle />
-              </ProgressCircle.Track>
-            </ProgressCircle>
-            <p className="text-background w-full mt-2 uppercase">Fats</p>
-            <p
-              className={
-                f && fgoal
-                  ? cn("text-background/50 w-full", {
-                      "text-yellow-500": (f / fgoal) * 100 > 100,
-                    })
-                  : "text-background/50 w-full"
-              }
-            >
-              {f && fgoal ? ((f / fgoal) * 100).toFixed(2) : 0}%
-            </p>
-            <p className="text-background w-full">{f} g</p>
-          </div>
+    <div className="group relative overflow-hidden bg-card border border-border p-6 rounded-[2.5rem] shadow-sm transition-all hover:shadow-md">
+      {/* Optional decorative background glow */}
+      <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
+
+      <Link href={`/foodlogs/${date}`} className="relative z-10 block">
+        <div className="flex justify-around items-start w-full gap-2">
+          <MacroCircle
+            label="Protein"
+            current={p}
+            goal={pgoal}
+            color="success"
+          />
+
+          {/* Divider */}
+          <div className="h-20 w-[1px] bg-border/50 self-center" />
+
+          <MacroCircle label="Carbs" current={c} goal={cgoal} color="danger" />
+
+          {/* Divider */}
+          <div className="h-20 w-[1px] bg-border/50 self-center" />
+
+          <MacroCircle label="Fats" current={f} goal={fgoal} color="warning" />
         </div>
       </Link>
-      {/* <div className="flex flex-col items-center pt-8 ">
-        {totalCalories ? (
-          <ProgressBar
-            aria-label="Loading"
-            className="w-64"
-            value={
-              totalCaloriesValue === 1
-                ? 0
-                : (totalCaloriesValue / parseFloat(goalData.calories)) * 100
-            }
-            color="default"
-            size="lg"
-          >
-            <Label>
-              <p>Calories</p>
-              <p className="text-xs lowercase">
-                {totalCaloriesValue} kcal / {goalData.calories} kcal{" "}
-              </p>
-              <p className="text-xs lowercase">
-                {goalData.calories - totalCaloriesValue} kcal left
-              </p>
-            </Label>
-            <ProgressBar.Output />
-            <ProgressBar.Track>
-              <ProgressBar.Fill />
-            </ProgressBar.Track>
-          </ProgressBar>
-        ) : (
-          <p>0kcal / {goalData.calories}kcal</p>
-        )}
-      </div> */}
     </div>
   );
 }
