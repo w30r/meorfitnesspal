@@ -226,7 +226,7 @@ export default function Home() {
 
         {/* Action Grid */}
         <nav className="grid grid-cols-4 gap-4 pt-2">
-          <Link href={`/logfood?date=${formatDate(today)}`} className="group">
+          <Link href={`/logfood/${formatDate(today)}`} className="group">
             <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-primary text-primary-foreground transition-transform active:scale-95 shadow-lg shadow-primary/20">
               <PlusCircle className="h-7 w-7" />
               <span className="text-xs font-bold uppercase tracking-tight">
