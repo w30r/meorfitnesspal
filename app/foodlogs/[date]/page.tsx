@@ -90,11 +90,9 @@ const FoodCard = ({ log }: { log: FoodLog }) => {
         </div>
       </div>
 
-      {realCalories !== log.calories && (
-        <p className="mt-3 text-[10px] italic text-muted-foreground text-center">
-          Calculated from macros: {realCalories} kcal
-        </p>
-      )}
+      <p className="mt-3 text-[10px] italic text-muted-foreground text-center">
+        Calculated from macros: {realCalories} kcal
+      </p>
     </div>
   );
 };
