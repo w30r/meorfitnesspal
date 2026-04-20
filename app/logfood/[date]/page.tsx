@@ -8,9 +8,12 @@ import {
 } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FaMagnifyingGlass } from "react-icons/fa6";
-import { useParams, useRouter, useSearchParams } from "next/navigation"; // 1. Import useSearchParams
-import { Suspense, useState } from "react";
+import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+// Assuming you have these standard UI components or similar
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 interface FormData {
   foodName: string;
@@ -23,6 +26,18 @@ interface FormData {
   meal: string;
 }
 
+const formatDate = (dateString: string): string => {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 let str =
   "give the nutrional facts per 100g in JSON format (use the field names: calories, carbs, protein, fats. and the value in number not string) for ";
 str = str.replaceAll(" ", "+");
@@ -32,9 +47,10 @@ str2 = str2.replaceAll(" ", "+");
 
 export default function LogPage() {
   const router = useRouter();
-  const params = useParams(); // 2. Initialize hook
+  const params = useParams();
   const dateParam = Array.isArray(params.date) ? params.date[0] : params.date;
   const defaultDate = dateParam || new Date().toLocaleDateString("en-CA");
+
   const [formData, setFormData] = useState<FormData>({
     foodName: "",
     servingSize: 0,
@@ -42,9 +58,10 @@ export default function LogPage() {
     carbs: 0,
     protein: 0,
     fats: 0,
-    date: defaultDate, // 3. Use it here
+    date: defaultDate,
     meal: "",
   });
+
   const [per100g, setPer100g] = useState({
     calories: 0,
     carbs: 0,
@@ -52,52 +69,46 @@ export default function LogPage() {
     fats: 0,
   });
 
-  function updateFields() {
-    setFormData((prev) => ({
-      ...prev,
-      calories: per100g.calories,
-      carbs: per100g.carbs,
-      protein: per100g.protein,
-      fats: per100g.fats,
-    }));
-  }
-
-  const handleHundredg = (n: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      servingSize: n,
-      calories: (per100g.calories / 100) * formData.servingSize,
-      carbs: (per100g.carbs / 100) * formData.servingSize,
-      protein: (per100g.protein / 100) * formData.servingSize,
-      fats: (per100g.fats / 100) * formData.servingSize,
-    }));
-    updateFields();
-  };
-
   const handlePaste = (pastedText: string) => {
-    // Regex explains:
-    // "key": -> matches the label
-    // \s*[:\s]\s* -> matches colon with any surrounding spaces
-    // ([\d.]+) -> captures the number (including decimals)
     const findValue = (key: string) => {
       const regex = new RegExp(`"${key}"\\s*:\\s*([\\d.]+)`, "i");
       const match = pastedText.match(regex);
       return match ? parseFloat(match[1]) : 0;
     };
 
-    setPer100g((prev) => ({
-      ...prev,
+    const newData = {
       calories: findValue("calories"),
       carbs: findValue("carbs"),
       protein: findValue("protein"),
       fats: findValue("fats"),
+    };
+
+    setPer100g(newData);
+    // Auto-calculate if serving size already exists
+    if (formData.servingSize > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        calories: (newData.calories * prev.servingSize) / 100,
+        carbs: (newData.carbs * prev.servingSize) / 100,
+        protein: (newData.protein * prev.servingSize) / 100,
+        fats: (newData.fats * prev.servingSize) / 100,
+      }));
+    }
+  };
+
+  const handleHundredg = (n: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      servingSize: n,
+      calories: (per100g.calories / 100) * n,
+      carbs: (per100g.carbs / 100) * n,
+      protein: (per100g.protein / 100) * n,
+      fats: (per100g.fats / 100) * n,
     }));
   };
 
-  const handleServingSizeChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const servingSize = Number(event.target.value);
+  const handleServingSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const servingSize = Number(e.target.value);
     setFormData((prev) => ({
       ...prev,
       servingSize: servingSize,
@@ -113,238 +124,218 @@ export default function LogPage() {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >,
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]:
-        e.target.name === "servingSize" ||
-        e.target.name === "calories" ||
-        e.target.name === "carbs" ||
-        e.target.name === "protein" ||
-        e.target.name === "fats"
-          ? Number(e.target.value)
-          : e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: ["servingSize", "calories", "carbs", "protein", "fats"].includes(
+        name,
+      )
+        ? Number(value)
+        : value,
+    }));
   };
 
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
-    // error if no meal
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formData.meal) {
       alert("Please select a meal");
       return;
     }
-    e.preventDefault();
     try {
-      setFormData({
-        ...formData,
-        meal: formData.meal || "NONE SELECTED", // Ensure meal is set to a default value if not provided
-      });
-
       await saveFoodLog(formData);
-      router.push("/"); // Redirect to the front page
-      // Optionally, reset the form after successful submission
-      setFormData({
-        foodName: "",
-        servingSize: 0,
-        calories: 0,
-        carbs: 0,
-        protein: 0,
-        fats: 0,
-        date: "",
-        meal: "",
-      });
+      router.push("/");
     } catch (error) {
       console.error("Failed to log food", error);
-      alert("Failed to log food. Please try again later.");
+      alert("Failed to log food.");
     }
   };
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex flex-col items-center justify-center bg-background px-8">
-        <h1 className="text-4xl font-bold  text-gray-800 dark:text-white">
-          Log Food
-        </h1>
-        <h1 className="mb-8">{formData.date}</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-          <div>
-            <label htmlFor="meal" className="text-lg font-medium mb-2">
-              Meal
-            </label>
-            {/* <MealCombobox onValueChange={handleChange} /> */}
-            <NativeSelect
-              name="meal"
-              value={formData.meal}
-              onChange={handleChange}
-            >
-              <NativeSelectOption value="">Select meal</NativeSelectOption>
-              <NativeSelectOption value="Breakfast">
-                Breakfast
-              </NativeSelectOption>
-              <NativeSelectOption value="Lunch">Lunch</NativeSelectOption>
-              <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
-              <NativeSelectOption value="Etc">Etc</NativeSelectOption>
-            </NativeSelect>
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="foodName" className="text-lg font-medium mb-2">
-              Food Name
-            </label>
-            <div className="flex gap-4">
-              <Input
-                id="foodName"
-                name="foodName"
-                value={formData.foodName}
-                onChange={handleChange}
-                autoComplete="off"
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2 w-64"
-              />
-              <Button variant="default" className="w-24 font-bold" asChild>
-                <a
-                  href={`https://www.google.com/search?q=${str}+${formData.foodName.replaceAll(
-                    " ",
-                    "+",
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaMagnifyingGlass /> 100
-                </a>
-              </Button>
-              <Button variant="default" className="w-24 font-bold" asChild>
-                <a
-                  href={`https://www.google.com/search?q=${str2}+${formData.foodName.replaceAll(
-                    " ",
-                    "+",
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaMagnifyingGlass /> Typical
-                </a>
-              </Button>
-            </div>
-          </div>
-          <div>
-            <Textarea
-              placeholder="Paste JSON from Google here..."
-              onChange={(e) => handlePaste(e.target.value)}
-              className="your-styling-here"
-            />
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="servingSize" className="text-lg font-medium mb-2">
-              Food mass (g)
-            </label>
-            <div className="flex gap-2">
-              <Input
-                autoComplete="off"
-                id="servingSize"
-                name="servingSize"
-                type="number"
-                value={formData.servingSize}
-                onChange={handleServingSizeChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2 w-1/4 autocomplete-off"
-              />
-              <Button
-                variant="outline"
-                onClick={() => handleHundredg(50)}
-                type="button"
-              >
-                50g
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleHundredg(100)}
-                type="button"
-              >
-                100g
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleHundredg(150)}
-                type="button"
-              >
-                150g
-              </Button>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="calories" className="text-lg font-medium mb-2">
-              Calories
-            </label>
-            <Input
-              autoComplete="off"
-              type="number"
-              id="calories"
-              name="calories"
-              value={formData.calories}
-              onChange={handleChange}
-              className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2 w-36"
-            />
-          </div>
-          <div className="flex w-lg items-center justify-between gap-12">
-            <div className="w-1/3">
-              <label
-                htmlFor="carbs"
-                className="text-lg font-medium mb-2 text-success"
-              >
-                Carbs (g)
-              </label>
-              <Input
-                autoComplete="off"
-                type="number"
-                id="carbs"
-                name="carbs"
-                value={formData.carbs}
-                onChange={handleChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2"
-              />
-            </div>
-            <div className="w-1/3">
-              <label
-                htmlFor="protein"
-                className="text-lg font-medium mb-2 text-destructive"
-              >
-                Protein (g)
-              </label>
-              <Input
-                autoComplete="off"
-                type="number"
-                id="protein"
-                name="protein"
-                value={formData.protein}
-                onChange={handleChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2"
-              />
-            </div>
-            <div className="w-1/3">
-              <label
-                htmlFor="fats"
-                className="text-lg font-medium mb-2 text-warning"
-              >
-                Fats (g)
-              </label>
-              <Input
-                autoComplete="off"
-                type="number"
-                id="fats"
-                name="fats"
-                value={formData.fats}
-                onChange={() => handleChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2"
-              />
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
+      <Card className="max-w-xl mx-auto shadow-lg">
+        <CardHeader className="text-center border-b mb-6">
+          <CardTitle className="text-3xl font-bold">Log Food</CardTitle>
+          <p className="text-muted-foreground font-medium">
+            {formatDate(formData.date)}
+          </p>
+        </CardHeader>
 
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600
-dark:bg-blue-700 dark:hover:bg-blue-800"
-          >
-            Log Food
-          </button>
-        </form>
-      </div>
-    </Suspense>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Meal Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="meal">Which meal is this?</Label>
+              <NativeSelect
+                name="meal"
+                value={formData.meal}
+                onChange={handleChange}
+              >
+                <NativeSelectOption value="">Select meal</NativeSelectOption>
+                <NativeSelectOption value="Breakfast">
+                  Breakfast
+                </NativeSelectOption>
+                <NativeSelectOption value="Lunch">Lunch</NativeSelectOption>
+                <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
+                <NativeSelectOption value="Etc">Etc</NativeSelectOption>
+              </NativeSelect>
+            </div>
+
+            {/* Food Name & Search */}
+            <div className="space-y-2">
+              <Label htmlFor="foodName">Food Name</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  id="foodName"
+                  name="foodName"
+                  placeholder="e.g. Chicken Breast"
+                  value={formData.foodName}
+                  onChange={handleChange}
+                  autoComplete="off"
+                  className="flex-1"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    asChild
+                    className="flex-1"
+                  >
+                    <a
+                      href={`https://www.google.com/search?q=${str}+${formData.foodName}`}
+                      target="_blank"
+                    >
+                      <FaMagnifyingGlass className="mr-2" /> 100g
+                    </a>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    asChild
+                    className="flex-1"
+                  >
+                    <a
+                      href={`https://www.google.com/search?q=${str2}+${formData.foodName}`}
+                      target="_blank"
+                    >
+                      <FaMagnifyingGlass className="mr-2" /> Typical
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* JSON Input Area */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                Data Import
+              </Label>
+              <Textarea
+                placeholder="Paste JSON result here to auto-fill..."
+                onChange={(e) => handlePaste(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-900 font-mono text-xs"
+              />
+            </div>
+
+            <hr className="opacity-50" />
+
+            {/* Mass / Serving Size */}
+            <div className="space-y-3">
+              <Label htmlFor="servingSize">Portion Size (grams)</Label>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  id="servingSize"
+                  name="servingSize"
+                  type="number"
+                  value={formData.servingSize || ""}
+                  onChange={handleServingSizeChange}
+                  className="w-24 font-bold text-lg"
+                />
+                {[50, 100, 150, 200].map((amount) => (
+                  <Button
+                    key={amount}
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => handleHundredg(amount)}
+                  >
+                    {amount}g
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Nutrition Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="calories">Calories</Label>
+                <Input
+                  type="number"
+                  id="calories"
+                  name="calories"
+                  value={formData.calories.toFixed(1) || ""}
+                  onChange={handleChange}
+                  className="text-xl h-12 border-primary/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="carbs"
+                  className="text-emerald-600 dark:text-emerald-400"
+                >
+                  Carbs (g)
+                </Label>
+                <Input
+                  id="carbs"
+                  name="carbs"
+                  type="number"
+                  value={formData.carbs.toFixed(1) || ""}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="protein"
+                  className="text-rose-600 dark:text-rose-400"
+                >
+                  Protein (g)
+                </Label>
+                <Input
+                  id="protein"
+                  name="protein"
+                  type="number"
+                  value={formData.protein.toFixed(1) || ""}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="fats"
+                  className="text-amber-600 dark:text-amber-400"
+                >
+                  Fats (g)
+                </Label>
+                <Input
+                  id="fats"
+                  name="fats"
+                  type="number"
+                  value={formData.fats.toFixed(1) || ""}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 text-lg font-semibold mt-4"
+            >
+              <FaPlus className="mr-2" /> Log Food
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
