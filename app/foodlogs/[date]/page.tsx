@@ -44,7 +44,7 @@ const FoodCard = ({ log }: { log: FoodLog }) => {
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm transition-all hover:shadow-md">
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-bold leading-none tracking-tight">
+          <h3 className="text-lg font-bold leading-none tracking-tight w-1/2">
             {log.foodName}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -53,7 +53,7 @@ const FoodCard = ({ log }: { log: FoodLog }) => {
         </div>
         <div className="text-right">
           <span className="text-2xl font-bold text-primary">
-            {log.calories}
+            {log.calories.toFixed(1)}
           </span>
           <span className="ml-1 text-xs font-medium uppercase text-muted-foreground">
             kcal
@@ -74,19 +74,19 @@ const FoodCard = ({ log }: { log: FoodLog }) => {
           <span className="text-xs font-medium text-muted-foreground uppercase">
             Protein
           </span>
-          <span className="text-sm font-bold">{log.protein}g</span>
+          <span className="text-sm font-bold">{log.protein.toFixed(0)}g</span>
         </div>
         <div className="flex flex-col items-center rounded-lg bg-secondary/50 py-2">
           <span className="text-xs font-medium text-muted-foreground uppercase">
             Carbs
           </span>
-          <span className="text-sm font-bold">{log.carbs}g</span>
+          <span className="text-sm font-bold">{log.carbs.toFixed(0)}g</span>
         </div>
         <div className="flex flex-col items-center rounded-lg bg-secondary/50 py-2">
           <span className="text-xs font-medium text-muted-foreground uppercase">
             Fats
           </span>
-          <span className="text-sm font-bold">{log.fats}g</span>
+          <span className="text-sm font-bold">{log.fats.toFixed(0)}g</span>
         </div>
       </div>
 
