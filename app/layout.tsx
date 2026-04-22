@@ -39,7 +39,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <header className="text-xl font-bold mb-8 text-foreground text-center mt-12">
+        <header className="text-xl font-bold text-foreground text-center border-b border-border py-4">
           MeorFitnessPal
         </header>
         {children}

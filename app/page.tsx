@@ -129,7 +129,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-10">
       {/* Date Navigation Header */}
-      <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-sm border-b border-border supports-backdrop-filter:bg-background/30">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <Button
             variant="ghost"

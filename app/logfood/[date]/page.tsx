@@ -151,7 +151,7 @@ export default function LogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
+    <div className="min-h-screen bg-background dark:bg-background py-12 px-4">
       <Card className="max-w-xl mx-auto shadow-lg">
         <CardHeader className="text-center border-b mb-6">
           <CardTitle className="text-3xl font-bold">Log Food</CardTitle>
@@ -232,7 +232,7 @@ export default function LogPage() {
               <Textarea
                 placeholder="Paste JSON result here to auto-fill..."
                 onChange={(e) => handlePaste(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-900 font-mono text-xs"
+                className="bg-background dark:bg-background font-mono text-xs"
               />
             </div>
 
