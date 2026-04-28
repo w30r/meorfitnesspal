@@ -1,6 +1,9 @@
 import { getFoodLogbyDate } from "@/app/actions";
 import Link from "next/link";
-import { ChevronLeft, Trash, Utensils } from "lucide-react"; // Optional: if you have lucide-react
+import { ChevronLeft, ChevronRight, Trash, Utensils } from "lucide-react"; // Optional: if you have lucide-react
+import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
+import DateNavigation from "./DateNavigation";
 
 interface FoodLog {
   _id: string;
@@ -38,7 +41,6 @@ const FoodCard = ({ log }: { log: FoodLog }) => {
   const realCalories = (log.protein * 4 + log.carbs * 4 + log.fats * 9).toFixed(
     1,
   );
-  const totalBreakfastCal = log.protein * 4 + log.carbs * 4 + log.fats * 9;
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm transition-all hover:shadow-md">
@@ -111,7 +113,7 @@ export default async function FoodLogs({
     <div className="min-h-screen bg-background text-foreground pb-12">
       {/* Header Section */}
       <header className="sticky top-0 z-10 w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="container flex h-16 items-center max-w-2xl mx-auto px-4">
+        <div className="container flex h-16 items-center max-w-2xl mx-auto px-4 justify-between">
           <Link
             href="/"
             className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
@@ -121,6 +123,9 @@ export default async function FoodLogs({
           <h1 className="ml-4 text-xl font-semibold tracking-tight">
             {formatShortDate(date)}
           </h1>
+          <div className="">
+            <DateNavigation date={date} />
+          </div>
         </div>
       </header>
 
