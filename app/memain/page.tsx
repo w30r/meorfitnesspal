@@ -47,6 +47,7 @@ export default function Page() {
   const [foodLogs, setFoodLogs] = useState<DailyStats[]>([]);
   const [days, setDays] = useState(30);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const currentLog = foodLogs?.find((l) => l.date === selectedDay);
 
   const formatDay = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -112,7 +113,7 @@ export default function Page() {
 
   console.log("🚀 ~ Page ~ foodLogs:", foodLogs);
   return (
-    <div className="max-w-5xl mx-12 p-4 space-y-6">
+    <div className="max-w-5xl mx-12 p-4 space-y-6 ">
       {/* 1. Period Selector Container */}
       <div className="flex flex-col items-center gap-4">
         <Button
@@ -192,6 +193,7 @@ export default function Page() {
                   value={item.totalProtein}
                   color="bg-rose-500"
                   active={hasData}
+                  label=""
                 />
                 <MacroDot
                   value={item.totalFats}
@@ -227,36 +229,27 @@ export default function Page() {
               </button>
             </div>
             {/* Find the actual log from the array to show specific macro numbers */}
-            {foodLogs.find((l) => l.date === selectedDay) && (
+            {currentLog && (
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-[10px] text-emerald-500 font-bold">
                     CARBS
                   </p>
                   <p className="text-xl font-bold">
-                    {foodLogs &&
-                      Math.round(
-                        foodLogs.find((l) => l.date === selectedDay).totalCarbs,
-                      )}
-                    g
+                    {/* 3. TypeScript now knows currentLog is safe to use */}
+                    {Math.round(currentLog.totalCarbs)}g
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] text-rose-500 font-bold">PROTEIN</p>
                   <p className="text-xl font-bold">
-                    {Math.round(
-                      foodLogs.find((l) => l.date === selectedDay).totalProtein,
-                    )}
-                    g
+                    {Math.round(currentLog.totalProtein)}g
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] text-amber-500 font-bold">FATS</p>
                   <p className="text-xl font-bold">
-                    {Math.round(
-                      foodLogs.find((l) => l.date === selectedDay).totalFats,
-                    )}
-                    g
+                    {Math.round(currentLog.totalFats)}g
                   </p>
                 </div>
               </div>
