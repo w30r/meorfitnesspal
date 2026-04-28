@@ -129,7 +129,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-10">
       {/* Date Navigation Header */}
-      <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-sm border-b border-border supports-backdrop-filter:bg-background/30">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <Button
             variant="ghost"
@@ -226,7 +226,7 @@ export default function Home() {
 
         {/* Action Grid */}
         <nav className="grid grid-cols-4 gap-4 pt-2">
-          <Link href={`/logfood?date=${formatDate(today)}`} className="group">
+          <Link href={`/logfood/${formatDate(today)}`} className="group">
             <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-primary text-primary-foreground transition-transform active:scale-95 shadow-lg shadow-primary/20">
               <PlusCircle className="h-7 w-7" />
               <span className="text-xs font-bold uppercase tracking-tight">
