@@ -267,7 +267,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/charts" className="group">
+          <Link href="/memain" className="group">
             <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-card border border-border transition-all hover:border-primary/50 active:scale-95">
               <BarChart3 className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
               <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">

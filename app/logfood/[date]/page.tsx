@@ -9,12 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
-import { useParams, useRouter } from "next/navigation";
+import { redirect, useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 // Assuming you have these standard UI components or similar
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { FaPaste } from "react-icons/fa";
+import { ChevronLeft } from "lucide-react";
 
 interface FormData {
   foodName: string;
@@ -172,11 +173,16 @@ export default function LogPage() {
   return (
     <div className="min-h-screen bg-background dark:bg-background py-12 px-4">
       <Card className="max-w-xl mx-auto shadow-lg">
+        <div className="ml-4 mb-2">
+          <Button variant="outline" onClick={() => redirect("/")}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
         <CardHeader className="text-center border-b mb-6">
           <CardTitle className="text-3xl font-bold">Log Food</CardTitle>
           <p className="text-muted-foreground font-medium">
             {formatDate(formData.date)}
-          </p>
+          </p>{" "}
         </CardHeader>
 
         <CardContent>

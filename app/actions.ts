@@ -250,3 +250,68 @@ export async function deleteMealById(mealId: string) {
     throw error;
   }
 }
+
+// last x number of food logs
+export async function getLatestFoodLogs(days: number) {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+
+    // 1. Calculate the date threshold
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (days - 1)); // -1 to include today
+    const startDateString = startDate.toISOString().split("T")[0];
+
+    // 2. Aggregate data
+    const stats = await db
+      .collection("foodlog")
+      .aggregate([
+        {
+          // Filter logs within our day range
+          $match: {
+            date: { $gte: startDateString },
+          },
+        },
+        {
+          // Group by date and sum the macros
+          $group: {
+            _id: "$date",
+            totalCalories: { $sum: "$calories" },
+            totalCarbs: { $sum: "$carbs" },
+            totalProtein: { $sum: "$protein" },
+            totalFats: { $sum: "$fats" },
+            logCount: { $sum: 1 },
+          },
+        },
+        {
+          // Order by most recent date first
+          $sort: { _id: -1 },
+        },
+        {
+          // Format the output for the frontend
+          $project: {
+            _id: 0,
+            date: "$_id",
+            totalCalories: 1,
+            totalCarbs: 1,
+            totalProtein: 1,
+            totalFats: 1,
+            logCount: 1,
+          },
+        },
+      ])
+      .toArray();
+
+    return {
+      success: true,
+      data: stats,
+    };
+  } catch (error) {
+    // Log the actual error on your server console for debugging
+    console.error("Error in getLatestFoodLogs:", error);
+
+    return {
+      success: false,
+      error: "Internal Server Error: Could not fetch logs.",
+    };
+  }
+}
