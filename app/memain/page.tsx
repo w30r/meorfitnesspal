@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import { getLatestFoodLogs } from "../actions";
+import { getGoalData, getLatestFoodLogs } from "../actions";
 import { redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 interface DailyStats {
@@ -46,8 +46,20 @@ const PERIODS = [7, 14, 30, 90];
 export default function Page() {
   const [foodLogs, setFoodLogs] = useState<DailyStats[]>([]);
   const [days, setDays] = useState(30);
+  const [calorieGoal, setCalorieGoal] = useState<number>(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const currentLog = foodLogs?.find((l) => l.date === selectedDay);
+
+  useEffect(() => {
+    const fetchGoal = async () => {
+      const res = await getGoalData();
+      console.log("🚀 ~ fetchGoal ~ res:", res);
+      setCalorieGoal(res[0]?.calories || (1499 as number));
+    };
+    fetchGoal();
+  }, []);
+
+  console.log("🚀 ~ Page ~ calorieGoal:", calorieGoal);
 
   const formatDay = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -148,6 +160,9 @@ export default function Page() {
             <span className="text-sm font-medium text-muted-foreground">
               kcal
             </span>
+            {/* <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+              You should be losing {calorieGoal - avgCalories} kcal
+            </p> */}
           </h2>
         </div>
       </div>

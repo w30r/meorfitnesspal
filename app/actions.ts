@@ -308,7 +308,6 @@ export async function getLatestFoodLogs(days: number) {
   } catch (error) {
     // Log the actual error on your server console for debugging
     console.error("Error in getLatestFoodLogs:", error);
-
     return {
       success: false,
       error: "Internal Server Error: Could not fetch logs.",
