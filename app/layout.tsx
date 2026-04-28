@@ -2,6 +2,24 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover", // Fixes white gaps around the notch
+};
+
+// export const metadata = {
+//   appleWebApp: {
+//     capable: true,
+//     statusBarStyle: 'black-translucent', // Makes the status bar float over your content
+//     title: 'My Awesome App',
+//   },
+// }
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -18,6 +36,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MeorFP",
   description: "meorFitnessPal",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent", // Makes the status bar float over your content
+    title: "MeorFP",
+  },
 };
 
 export default function RootLayout({
