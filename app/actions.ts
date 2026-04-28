@@ -242,7 +242,7 @@ export async function deleteMealById(mealId: string) {
     const result = await collection.deleteOne({ _id: new ObjectId(mealId) });
 
     // This clears the cache and fetches fresh data for the food logs page
-    revalidatePath("/food-logs/[date]", "page");
+    revalidatePath("/foodlogs/[date]", "page");
 
     return result.deletedCount;
   } catch (error) {

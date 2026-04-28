@@ -1,9 +1,8 @@
-import { getFoodLogbyDate } from "@/app/actions";
+import { deleteMealById, getFoodLogbyDate } from "@/app/actions";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Trash, Utensils } from "lucide-react"; // Optional: if you have lucide-react
-import { Button } from "@/components/ui/button";
-import { redirect } from "next/navigation";
+import { ChevronLeft, Trash, Utensils } from "lucide-react"; // Optional: if you have lucide-react
 import DateNavigation from "./DateNavigation";
+import FoodCard from "./FoodCard";
 
 interface FoodLog {
   _id: string;
@@ -37,67 +36,6 @@ export function formatShortDate(dateStr: string) {
 }
 
 // Sub-component for individual food items to keep the main return clean
-const FoodCard = ({ log }: { log: FoodLog }) => {
-  const realCalories = (log.protein * 4 + log.carbs * 4 + log.fats * 9).toFixed(
-    1,
-  );
-
-  return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm transition-all hover:shadow-md">
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="text-lg font-bold leading-none tracking-tight w-1/2">
-            {log.foodName}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {log.servingSize || "1 portion"}
-          </p>
-        </div>
-        <div className="text-right">
-          <span className="text-2xl font-bold text-primary">
-            {log.calories.toFixed(1)}
-          </span>
-          <span className="ml-1 text-xs font-medium uppercase text-muted-foreground">
-            kcal
-          </span>
-          {/* <span className="ml-1 text-xs font-medium uppercase text-muted-foreground">
-            {log._id}
-          </span> */}
-          <Trash
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 stroke-red-700"
-            size={16}
-            // onClick={() => deleteMealById(log._id)}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 border-t border-border pt-4">
-        <div className="flex flex-col items-center rounded-lg bg-secondary/50 py-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase">
-            Protein
-          </span>
-          <span className="text-sm font-bold">{log.protein.toFixed(0)}g</span>
-        </div>
-        <div className="flex flex-col items-center rounded-lg bg-secondary/50 py-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase">
-            Carbs
-          </span>
-          <span className="text-sm font-bold">{log.carbs.toFixed(0)}g</span>
-        </div>
-        <div className="flex flex-col items-center rounded-lg bg-secondary/50 py-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase">
-            Fats
-          </span>
-          <span className="text-sm font-bold">{log.fats.toFixed(0)}g</span>
-        </div>
-      </div>
-
-      <p className="mt-3 text-[10px] italic text-muted-foreground text-center">
-        Calculated from macros: {realCalories} kcal
-      </p>
-    </div>
-  );
-};
 
 export default async function FoodLogs({
   params,
@@ -106,6 +44,7 @@ export default async function FoodLogs({
 }) {
   const { date } = await params;
   const data = await getFoodLogbyDate(date);
+  console.log("🚀 ~ FoodLogs ~ data:", data);
 
   const meals = ["Breakfast", "Lunch", "Dinner", ""];
 
@@ -157,7 +96,11 @@ export default async function FoodLogs({
               <div className="grid gap-4">
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map((log: FoodLog) => (
-                    <FoodCard key={log._id} log={log} />
+                    <FoodCard
+                      key={log._id}
+                      log={log}
+                      onDelete={() => deleteMealById(log._id)}
+                    />
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 rounded-xl border  border-border bg-muted/30">
