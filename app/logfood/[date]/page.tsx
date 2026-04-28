@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 // Assuming you have these standard UI components or similar
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { FaPaste } from "react-icons/fa";
 
 interface FormData {
   foodName: string;
@@ -47,9 +48,27 @@ str2 = str2.replaceAll(" ", "+");
 
 export default function LogPage() {
   const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // 1. Create the ref
   const params = useParams();
   const dateParam = Array.isArray(params.date) ? params.date[0] : params.date;
   const defaultDate = dateParam || new Date().toLocaleDateString("en-CA");
+
+  const readClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        // Update the actual textarea element's value visually
+        if (textareaRef.current) {
+          textareaRef.current.value = text;
+        }
+        // Trigger your existing logic to parse the JSON and update state
+        handlePaste(text);
+      }
+    } catch (err) {
+      console.error("Clipboard access denied", err);
+      alert("Please allow clipboard permissions to use this feature.");
+    }
+  };
 
   const [formData, setFormData] = useState<FormData>({
     foodName: "",
@@ -229,7 +248,18 @@ export default function LogPage() {
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">
                 Data Import
               </Label>
+              <Button
+                type="button" // Important: keep it from submitting the form
+                variant="ghost"
+                size="sm"
+                onClick={readClipboard}
+                className="h-7 text-[10px] gap-1 text-primary"
+              >
+                <FaPaste className="w-3 h-3" />
+                Paste from Clipboard
+              </Button>
               <Textarea
+                ref={textareaRef} // 4. Attach the ref
                 placeholder="Paste JSON result here to auto-fill..."
                 onChange={(e) => handlePaste(e.target.value)}
                 className="bg-background dark:bg-background font-mono text-xs"
