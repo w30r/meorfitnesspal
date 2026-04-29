@@ -14,12 +14,18 @@ export const viewport: Viewport = {
 };
 
 // export const metadata = {
+//   title: "MeorFitnessPal",
+//   // ... other metadata
 //   appleWebApp: {
 //     capable: true,
-//     statusBarStyle: 'black-translucent', // Makes the status bar float over your content
-//     title: 'My Awesome App',
+//     statusBarStyle: "default",
+//     title: "MeorFP",
+//     // startupImage: [], // Optional: add splash screens here
 //   },
-// }
+//   icons: {
+//     apple: "/icon-512x512.png", // This makes it look right on iPhones
+//   },
+// };
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -38,8 +44,12 @@ export const metadata: Metadata = {
   description: "meorFitnessPal",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent", // Makes the status bar float over your content
+    statusBarStyle: "default",
     title: "MeorFP",
+    // startupImage: [], // Optional: add splash screens here
+  },
+  icons: {
+    apple: "/icon-512x512.png", // This makes it look right on iPhones
   },
 };
 
