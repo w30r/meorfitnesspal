@@ -124,6 +124,16 @@ export default function Page() {
   }, [days]);
 
   console.log("🚀 ~ Page ~ foodLogs:", foodLogs);
+
+  const getHeatClass = (calories: number, goal: number) => {
+    if (calories === 0) return "bg-muted/10 text-muted-foreground/40";
+    const ratio = calories / goal;
+
+    if (ratio < 0.3) return "bg-primary/10 text-primary";
+    if (ratio < 0.6) return "bg-primary/30 text-primary";
+    if (ratio < 0.9) return "bg-primary/60 text-primary-foreground";
+    return "bg-primary text-primary-foreground font-black shadow-inner"; // "Goal" state
+  };
   return (
     <div className="max-w-5xl mx-12 p-4 space-y-6 ">
       {/* 1. Period Selector Container */}
@@ -168,64 +178,55 @@ export default function Page() {
       </div>
 
       {/* 3. The Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3">
+      <div className="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10 gap-2">
         {foodLogs.map((item) => {
           const hasData = item.logCount > 0;
           const isSelected = selectedDay === item.date;
+          const heatClass = getHeatClass(item.totalCalories, calorieGoal);
 
           return (
             <button
               key={item.date}
               onClick={() => setSelectedDay(isSelected ? null : item.date)}
-              className={`relative flex flex-col items-center justify-between p-3 rounded-2xl border transition-all active:scale-95 ${
-                hasData
-                  ? isSelected
-                    ? "border-primary ring-2 ring-primary/20 bg-card"
-                    : "bg-card border-border shadow-sm"
-                  : "bg-muted/30 border-transparent opacity-40"
-              }`}
+              className={`
+          aspect-square flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95
+          ${heatClass}
+          ${isSelected ? "ring-2 ring-ring ring-offset-2 scale-105 z-10" : "border-transparent"}
+        `}
             >
-              <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
-                {formatDay(item.date)}
+              <span className="text-[9px] uppercase opacity-60 font-bold mb-0.5">
+                {new Date(item.date).toLocaleDateString("en-US", {
+                  day: "numeric",
+                })}
               </span>
 
-              <div className="my-2 text-center">
-                <span
-                  className={`text-xl font-black leading-none ${hasData ? "text-foreground" : "text-muted-foreground/40"}`}
-                >
-                  {hasData ? Math.round(item.totalCalories) : "—"}
-                </span>
-              </div>
+              <span className="text-sm font-bold leading-none">
+                {hasData ? Math.round(item.totalCalories) : "—"}
+              </span>
 
-              <div className="flex w-full justify-between gap-1 mt-1">
-                <MacroDot
-                  value={item.totalCarbs}
-                  color="bg-emerald-500"
-                  active={hasData}
-                  label=""
-                />
-                <MacroDot
-                  value={item.totalProtein}
-                  color="bg-rose-500"
-                  active={hasData}
-                  label=""
-                />
-                <MacroDot
-                  value={item.totalFats}
-                  color="bg-amber-500"
-                  active={hasData}
-                  label=""
-                />
-              </div>
-
-              {item.logCount > 1 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-                  {item.logCount}
-                </span>
+              {/* Small indicator dots for macros at the bottom of the square */}
+              {hasData && (
+                <div className="flex gap-0.5 mt-1">
+                  <div className="h-1 w-1 rounded-full bg-current opacity-40" />
+                  <div className="h-1 w-1 rounded-full bg-current opacity-40" />
+                  <div className="h-1 w-1 rounded-full bg-current opacity-40" />
+                </div>
               )}
             </button>
           );
         })}
+      </div>
+
+      <div className="flex items-center gap-2 mt-4 text-[10px] text-muted-foreground self-end">
+        <span>Less</span>
+        <div className="flex gap-1">
+          <div className="h-3 w-3 rounded-sm bg-muted/20" />
+          <div className="h-3 w-3 rounded-sm bg-emerald-900/30" />
+          <div className="h-3 w-3 rounded-sm bg-emerald-700/50" />
+          <div className="h-3 w-3 rounded-sm bg-emerald-500" />
+          <div className="h-3 w-3 rounded-sm bg-emerald-400" />
+        </div>
+        <span>More (Goal)</span>
       </div>
 
       {/* 4. Detail View (Drawer-like) */}

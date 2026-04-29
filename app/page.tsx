@@ -130,7 +130,7 @@ export default function Home() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-10">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Date Navigation Header */}
       <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-sm border-b border-border supports-backdrop-filter:bg-background/30">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -261,9 +261,17 @@ export default function Home() {
               </span>
             </div>
           </Link>
+          <Link href={`/logweight`} className="group">
+            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-accent text-primary-foreground transition-transform active:scale-95 shadow-lg shadow-primary/20">
+              <PlusCircle className="h-7 w-7" />
+              <span className="text-xs font-bold uppercase tracking-tight">
+                Log Weight
+              </span>
+            </div>
+          </Link>
 
-          <Dialog>
-            <DialogTrigger>
+          {/* <Dialog>
+            <DialogTrigger>T
               <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-chart-5 border border-border transition-all hover:border-primary/50 active:scale-95">
                 <PlusCircle className="h-7 w-7 text-primary-foreground group-hover:text-primary transition-colors" />
 
@@ -283,7 +291,7 @@ export default function Home() {
                 <QuickAdd />
               </div>
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
 
           <Link href="/goals" className="group">
             <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-card border border-border transition-all hover:border-primary/50 active:scale-95">
@@ -312,16 +320,6 @@ export default function Home() {
             </div>
           </Link>
         </nav>
-
-        {/* Quick View Link */}
-        <Link href={`/foodlogs/${formatDate(today)}`} className="block">
-          <Button
-            variant="ghost"
-            className="w-full py-6 text-muted-foreground hover:text-primary rounded-2xl border border-dashed border-border hover:border-primary/50"
-          >
-            View Detailed Food Logs
-          </Button>
-        </Link>
       </main>
     </div>
   );

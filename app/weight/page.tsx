@@ -24,7 +24,7 @@ export default function WeightPage() {
   }, []);
 
   return (
-    <div className="container max-w-4xl py-10 px-4">
+    <div className="container max-w-2xl mx-auto py-10 px-4 ">
       <div className="mb-4 ">
         <Button variant="outline" size="sm" onClick={() => redirect("/")}>
           <ChevronLeft />
