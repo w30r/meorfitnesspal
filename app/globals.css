@@ -10,6 +10,21 @@
   -webkit-user-select: none;
 }
 
+.recharts-surface,
+.recharts-wrapper,
+.recharts-container {
+  outline: none !important;
+  border: none !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Specifically target the "active" rectangle Recharts uses for mouse tracking */
+.recharts-active-dot,
+.recharts-rectangle.recharts-tooltip-cursor {
+  display: none !important;
+}
+
 :root {
   --background: oklch(0.9578 0.0058 264.5321);
   --foreground: oklch(0.4355 0.043 279.325);

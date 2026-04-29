@@ -17,12 +17,14 @@ import {
   Target,
   BarChart3,
   Calendar,
+  Weight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFoodLogbyDate, getGoalData } from "./actions";
 import KadUtama from "@/components/kadutama";
 import QuickAdd from "@/components/QuickAdd";
 import { cn } from "@/lib/utils";
+import { BsQuestion } from "react-icons/bs";
 
 // Interfaces remain unchanged for functionality
 export interface FoodEntry {
@@ -198,12 +200,33 @@ export default function Home() {
               </div>
               <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
                 <div
-                  className={cn("h-full transition-all duration-700 ease-out", {
-                    "bg-primary": caloriePercentage <= 100,
-                    "bg-red-500": caloriePercentage > 100,
-                  })}
+                  className={cn(
+                    "h-full transition-all duration-700 ease-out",
+                    "bg-primary",
+                    caloriePercentage > 50 &&
+                      "bg-linear-to-r from-primary to-orange-500",
+                    caloriePercentage > 80 && "from-primary to-red-500",
+                    caloriePercentage >= 100 && "bg-red-500",
+                  )}
                   style={{ width: `${Math.min(caloriePercentage, 100)}%` }}
                 />
+              </div>
+              <div className="mt-4">
+                {foodLog && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="flex-1 text-xs"
+                  >
+                    <a
+                      href={`https://www.google.com/search?q=give+me+suggestion+on+what+to+eat.+i+have+${(1500 - foodLog!.totalCalories).toFixed(0)}+kcal+left+to+eat+and+i+have+eaten+${(foodLog?.totalProtein).toFixed(0)}+g+out+of+${goal?.protein?.toFixed(0)}+g+of+protein+as+of+now+for+today.`}
+                      target="_blank"
+                    >
+                      <BsQuestion className="mr-2" /> Suggestion
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -276,6 +299,15 @@ export default function Home() {
               <BarChart3 className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
               <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
                 Stats
+              </span>
+            </div>
+          </Link>
+
+          <Link href="/weight" className="group col-span-2">
+            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-card border border-border transition-all hover:border-primary/50 active:scale-95">
+              <Weight className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
+                Weight
               </span>
             </div>
           </Link>

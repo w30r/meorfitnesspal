@@ -45,7 +45,6 @@ export default function FoodLogs() {
   const { date } = useParams();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<FoodLog[]>([]);
-  const [];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +55,7 @@ export default function FoodLogs() {
     fetchData();
   }, [date]);
 
-  const meals = ["Breakfast", "Lunch", "Dinner", ""];
+  const meals = ["Breakfast", "Lunch", "Dinner", "Etc"];
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-12">
@@ -108,7 +107,7 @@ export default function FoodLogs() {
                     <FoodCard
                       key={log._id}
                       log={log}
-                      // onDelete={}
+                      // onDelete={handleDeleteLog}
                     />
                   ))
                 ) : (

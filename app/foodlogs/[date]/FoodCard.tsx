@@ -1,7 +1,7 @@
 "use client";
 import { deleteMealById } from "@/app/actions";
 import { Trash } from "lucide-react";
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 /**
  * Interface representing the structure of a Food Log entry.
@@ -19,22 +19,21 @@ export interface FoodLog {
 interface FoodCardProps {
   log: FoodLog;
   onDelete?: (id: string) => void;
+  date?: string;
 }
 
-const FoodCard = ({ log, onDelete }: FoodCardProps) => {
+const FoodCard = ({ log, date }: FoodCardProps) => {
   // Calculate calories based on Atwater system: 4 kcal/g for protein/carbs, 9 kcal/g for fats
+  const router = useRouter();
   const realCalories = (log.protein * 4 + log.carbs * 4 + log.fats * 9).toFixed(
     1,
   );
-  const [isPending, startTransition] = useTransition();
 
-  const handleAction = () => {
-    if (!log._id || !onDelete) return;
-
-    // Use transition to allow Next.js to refresh the server data automatically
-    startTransition(async () => {
-      await deleteMealById(log._id!);
-    });
+  const handleDelete = async () => {
+    console.log(`deleting ${log.foodName}`);
+    await deleteMealById(log._id!);
+    router.refresh();
+    console.log("routed!");
   };
 
   return (
@@ -62,7 +61,7 @@ const FoodCard = ({ log, onDelete }: FoodCardProps) => {
 
           {/* Delete Action */}
           <button
-            onClick={handleAction}
+            onClick={handleDelete}
             className="mt-2 p-1 transition-colors hover:bg-destructive/10 rounded-md"
             aria-label="Delete food log"
           >

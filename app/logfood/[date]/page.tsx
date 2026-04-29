@@ -161,6 +161,10 @@ export default function LogPage() {
       alert("Please select a meal");
       return;
     }
+    setFormData((prev) => ({
+      ...prev,
+      foodName: defaultDate.charAt(0).toUpperCase(),
+    }));
     try {
       await saveFoodLog(formData);
       router.push("/");

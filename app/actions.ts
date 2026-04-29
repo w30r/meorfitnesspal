@@ -314,3 +314,109 @@ export async function getLatestFoodLogs(days: number) {
     };
   }
 }
+
+// 1. Fetch all weight logs (sorted by date for the graph)
+export async function getWeightLogs() {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const logs = await db
+      .collection("weightlog")
+      .find({})
+      .sort({ date: 1 }) // Sort ascending so the graph flows left-to-right
+      .toArray();
+
+    return logs.map((log) => ({
+      ...log,
+      _id: log._id.toString(),
+    }));
+  } catch (error) {
+    console.error("Failed to fetch weight logs:", error);
+    return [];
+  }
+}
+
+// 2. Add or Update weight for a specific date
+export async function upsertWeight(weight: number, date: string) {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("weightlog");
+
+    // Use updateOne with upsert: true so it updates if date exists, else creates new
+    await collection.updateOne(
+      { date: date },
+      { $set: { weight: weight, date: date } },
+      { upsert: true },
+    );
+
+    revalidatePath("/weight"); // Assuming your new page is at /weight
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to log weight:", error);
+    throw new Error("Failed to save weight entry.");
+  }
+}
+
+// 3. Delete a weight log
+export async function deleteWeightById(id: string) {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const result = await db
+      .collection("weightlog")
+      .deleteOne({ _id: new ObjectId(id) });
+
+    revalidatePath("/weight");
+    return result.deletedCount;
+  } catch (error) {
+    console.error("Failed to delete weight log:", error);
+    throw error;
+  }
+}
+
+export async function getCombinedWeightAndCals() {
+  const db = await connectToDatabase("meorfitnesspal");
+
+  const weightLogs = await db.collection("weightlog").find().toArray();
+  const foodLogs = await db.collection("foodlog").find().toArray();
+
+  const dailyCalories: Record<string, number> = {};
+
+  foodLogs.forEach((log) => {
+    const p = Number(log.protein) || 0;
+    const c = Number(log.carbs) || 0;
+    const f = Number(log.fats) || 0;
+    const totalCals = p * 4 + c * 4 + f * 9;
+
+    // Convert YYYY-MM-DD to DD-MM-YYYY to match weightlog
+    let dateKey = log.date;
+    if (log.date.includes("-") && log.date.split("-")[0].length === 4) {
+      const [y, m, d] = log.date.split("-");
+      dateKey = `${d}-${m}-${y}`;
+    }
+
+    // Normalize (remove leading zeros) to be safe
+    const normalizedKey = dateKey.split("-").map(Number).join("-");
+    dailyCalories[normalizedKey] =
+      (dailyCalories[normalizedKey] || 0) + totalCals;
+  });
+
+  const combined = weightLogs
+    .map((w) => {
+      // Normalize weight date key to match ("28-04-2026" -> "28-4-2026")
+      const normalizedWeightDate = w.date.split("-").map(Number).join("-");
+
+      return {
+        date: w.date,
+        weight: w.weight,
+        calories: Math.round(dailyCalories[normalizedWeightDate] || 0),
+      };
+    })
+    .sort((a, b) => {
+      const [d1, m1, y1] = a.date.split("-").map(Number);
+      const [d2, m2, y2] = b.date.split("-").map(Number);
+      return (
+        new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime()
+      );
+    });
+
+  return combined;
+}
