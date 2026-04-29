@@ -1,8 +1,12 @@
+"use client";
 import { deleteMealById, getFoodLogbyDate } from "@/app/actions";
 import Link from "next/link";
-import { ChevronLeft, Trash, Utensils } from "lucide-react"; // Optional: if you have lucide-react
+import { ChevronLeft, Utensils } from "lucide-react"; // Optional: if you have lucide-react
 import DateNavigation from "./DateNavigation";
 import FoodCard from "./FoodCard";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface FoodLog {
   _id: string;
@@ -37,14 +41,20 @@ export function formatShortDate(dateStr: string) {
 
 // Sub-component for individual food items to keep the main return clean
 
-export default async function FoodLogs({
-  params,
-}: {
-  params: Promise<{ date: string }>;
-}) {
-  const { date } = await params;
-  const data = await getFoodLogbyDate(date);
-  console.log("🚀 ~ FoodLogs ~ data:", data);
+export default function FoodLogs() {
+  const { date } = useParams();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [data, setData] = useState<FoodLog[]>([]);
+  const [];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getFoodLogbyDate(date as string);
+      setData(response?.logs || []);
+      console.log("🚀 ~ fetchData ~ response:", response);
+    };
+    fetchData();
+  }, [date]);
 
   const meals = ["Breakfast", "Lunch", "Dinner", ""];
 
@@ -60,19 +70,21 @@ export default async function FoodLogs({
             <ChevronLeft className="h-4 w-4" /> Back
           </Link>
           <h1 className="ml-4 text-xl font-semibold tracking-tight">
-            {formatShortDate(date)}
+            {formatShortDate(date as string)}
           </h1>
           <div className="">
-            <DateNavigation date={date} />
+            <DateNavigation date={date as string} />
+          </div>
+          <div>
+            <Button>Prev</Button>
+            <Button>Next</Button>
           </div>
         </div>
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 mt-8 flex flex-col gap-10">
         {meals.map((mealType) => {
-          const filteredLogs = data.logs.filter(
-            (x: FoodLog) => x.meal === mealType,
-          );
+          const filteredLogs = data.filter((x: FoodLog) => x.meal === mealType);
 
           return (
             <section key={mealType} className="flex flex-col gap-4">
@@ -87,9 +99,6 @@ export default async function FoodLogs({
                   <span className="ml-auto text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
                     {filteredLogs.length} items
                   </span>
-                  <span className="ml-auto text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
-                    {filteredLogs.calories} items
-                  </span>
                 </div>
               </div>
 
@@ -99,7 +108,7 @@ export default async function FoodLogs({
                     <FoodCard
                       key={log._id}
                       log={log}
-                      onDelete={() => deleteMealById(log._id)}
+                      // onDelete={}
                     />
                   ))
                 ) : (
