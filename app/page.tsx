@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { getFoodLogbyDate, getGoalData } from "./actions";
 import KadUtama from "@/components/kadutama";
 import QuickAdd from "@/components/QuickAdd";
+import { cn } from "@/lib/utils";
 
 // Interfaces remain unchanged for functionality
 export interface FoodEntry {
@@ -197,7 +198,10 @@ export default function Home() {
               </div>
               <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary transition-all duration-700 ease-out"
+                  className={cn("h-full transition-all duration-700 ease-out", {
+                    "bg-primary": caloriePercentage <= 100,
+                    "bg-red-500": caloriePercentage > 100,
+                  })}
                   style={{ width: `${Math.min(caloriePercentage, 100)}%` }}
                 />
               </div>
