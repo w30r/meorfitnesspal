@@ -2,6 +2,7 @@
 import { deleteMealById } from "@/app/actions";
 import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useFoodLogStore } from "@/lib/store";
 
 /**
  * Interface representing the structure of a Food Log entry.
@@ -9,7 +10,7 @@ import { useRouter } from "next/navigation";
 export interface FoodLog {
   _id?: string;
   foodName: string;
-  servingSize?: string;
+  servingSize?: string | number;
   calories: number;
   protein: number;
   carbs: number;
@@ -23,8 +24,8 @@ interface FoodCardProps {
 }
 
 const FoodCard = ({ log, date }: FoodCardProps) => {
-  // Calculate calories based on Atwater system: 4 kcal/g for protein/carbs, 9 kcal/g for fats
   const router = useRouter();
+  const invalidateDate = useFoodLogStore((s) => s.invalidateDate);
   const realCalories = (log.protein * 4 + log.carbs * 4 + log.fats * 9).toFixed(
     1,
   );
@@ -32,6 +33,10 @@ const FoodCard = ({ log, date }: FoodCardProps) => {
   const handleDelete = async () => {
     console.log(`deleting ${log.foodName}`);
     await deleteMealById(log._id!);
+    if (date) {
+      invalidateDate(date);
+    }
+    invalidateDate(new Date().toISOString().split("T")[0]);
     router.refresh();
     console.log("routed!");
   };
@@ -45,7 +50,7 @@ const FoodCard = ({ log, date }: FoodCardProps) => {
             {log.foodName}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            {log.servingSize || "1 portion"}
+            {log.servingSize ? String(log.servingSize) : "1 portion"}
           </p>
         </div>
 
