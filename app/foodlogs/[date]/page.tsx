@@ -88,8 +88,34 @@ export default function FoodLogs() {
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 mt-8 flex flex-col gap-10">
+        <section className="flex items-center justify-between rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Daily Total
+            </p>
+            <p className="text-3xl font-black text-foreground">
+              {data.reduce((sum, log) => sum + log.calories, 0).toFixed(0)}
+              <span className="ml-1 text-sm font-medium text-muted-foreground">
+                kcal
+              </span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Items
+            </p>
+            <p className="text-3xl font-black text-foreground">
+              {data.length}
+            </p>
+          </div>
+        </section>
+
         {meals.map((mealType) => {
           const filteredLogs = data.filter((x: FoodLog) => x.meal === mealType);
+          const totalMealCalories = filteredLogs.reduce(
+            (sum, log) => sum + log.calories,
+            0,
+          );
 
           return (
             <section key={mealType} className="flex flex-col gap-4">
@@ -100,9 +126,12 @@ export default function FoodLogs() {
                     {mealType}
                   </h2>
                 </div>
-                <div>
-                  <span className="ml-auto text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
                     {filteredLogs.length} items
+                  </span>
+                  <span className="text-sm font-bold text-primary">
+                    {totalMealCalories.toFixed(0)} kcal
                   </span>
                 </div>
               </div>
