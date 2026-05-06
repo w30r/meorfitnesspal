@@ -1,5 +1,5 @@
 "use client";
-import { deleteMealById } from "@/app/actions";
+import { deleteMealById, getFoodLogbyDate } from "@/app/actions";
 import Link from "next/link";
 import { ChevronLeft, Utensils } from "lucide-react"; // Optional: if you have lucide-react
 import DateNavigation from "./DateNavigation";
@@ -7,12 +7,11 @@ import FoodCard from "./FoodCard";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useFoodLogStore } from "@/lib/store";
 
 interface FoodLog {
   _id: string;
   foodName: string;
-  servingSize: string | number;
+  servingSize: string;
   calories: number;
   carbs: number;
   protein: number;
@@ -44,22 +43,17 @@ export function formatShortDate(dateStr: string) {
 
 export default function FoodLogs() {
   const { date } = useParams();
-  const dateStr = date as string;
-  const getFoodLog = useFoodLogStore((s) => s.getFoodLog);
-  const cachedData = useFoodLogStore((s) => s.cache[dateStr] || null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<FoodLog[]>([]);
 
   useEffect(() => {
-    getFoodLog(dateStr).then((response) => {
+    const fetchData = async () => {
+      const response = await getFoodLogbyDate(date as string);
       setData(response?.logs || []);
-    });
-  }, [dateStr, getFoodLog]);
-
-  useEffect(() => {
-    if (cachedData) {
-      setData(cachedData.logs || []);
-    }
-  }, [cachedData]);
+      console.log("🚀 ~ fetchData ~ response:", response);
+    };
+    fetchData();
+  }, [date]);
 
   const meals = ["Breakfast", "Lunch", "Dinner", "Etc"];
 

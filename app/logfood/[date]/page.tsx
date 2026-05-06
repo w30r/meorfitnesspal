@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { FaMagnifyingGlass, FaPlus } from "react-icons/fa6";
 import { redirect, useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { useFoodLogStore } from "@/lib/store";
 // Assuming you have these standard UI components or similar
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -52,7 +51,6 @@ export default function LogPage() {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null); // 1. Create the ref
   const params = useParams();
-  const invalidateDate = useFoodLogStore((s) => s.invalidateDate);
   const dateParam = Array.isArray(params.date) ? params.date[0] : params.date;
   const defaultDate = dateParam || new Date().toLocaleDateString("en-CA");
 
@@ -169,8 +167,6 @@ export default function LogPage() {
     }));
     try {
       await saveFoodLog(formData);
-      invalidateDate(formData.date);
-      invalidateDate(new Date().toISOString().split("T")[0]);
       router.push("/");
     } catch (error) {
       console.error("Failed to log food", error);

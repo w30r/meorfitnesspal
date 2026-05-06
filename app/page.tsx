@@ -20,8 +20,7 @@ import {
   Weight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getGoalData } from "./actions";
-import { useFoodLogStore, FoodLogResponse } from "@/lib/store";
+import { getFoodLogbyDate, getGoalData } from "./actions";
 import KadUtama from "@/components/kadutama";
 import QuickAdd from "@/components/QuickAdd";
 import { cn } from "@/lib/utils";
@@ -38,6 +37,14 @@ export interface FoodEntry {
   fats: number;
   date: string;
   meal: string;
+}
+
+export interface FoodLogResponse {
+  logs: FoodEntry[];
+  totalCalories: number;
+  totalCarbs: number;
+  totalProtein: number;
+  totalFats: number;
 }
 
 interface Goal {
@@ -76,15 +83,22 @@ export function formatShortDate(dateStr: string) {
 export default function Home() {
   const [today, setToday] = useState(new Date());
   const [goal, setGoal] = useState<Goal | null>(null);
+  const [foodLog, setFoodLog] = useState<FoodLogResponse | null>(null);
   const [isGoalLoading, setIsGoalLoading] = useState(true);
-  const getFoodLog = useFoodLogStore((s) => s.getFoodLog);
-  const foodLog = useFoodLogStore((s) => s.cache[formatDate(today)] || null);
 
   const isToday = formatDate(today) === formatDate(new Date());
 
   useEffect(() => {
-    getFoodLog(formatDate(today));
-  }, [today, getFoodLog]);
+    const fetchData = async () => {
+      try {
+        const data = await getFoodLogbyDate(formatDate(today));
+        setFoodLog(data);
+      } catch {
+        console.error("Failed to get food log");
+      }
+    };
+    fetchData();
+  }, [today]);
 
   useEffect(() => {
     const fetchData = async () => {
