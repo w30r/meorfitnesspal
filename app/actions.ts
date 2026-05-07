@@ -15,6 +15,12 @@ export interface FoodEntry {
   date: string;
   meal: string;
   isFavorite?: boolean;
+  per100g?: {
+    calories: number;
+    carbs: number;
+    protein: number;
+    fats: number;
+  };
 }
 
 // Define the shape of the function response
@@ -46,13 +52,32 @@ interface FormData {
   fats: number;
   date: string;
   meal: string;
+  per100g?: {
+    calories: number;
+    carbs: number;
+    protein: number;
+    fats: number;
+  };
 }
 
 export async function saveFoodLog(foodLog: FormData) {
   try {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
-    const result = await collection.insertOne(foodLog);
+    
+    // Calculate per100g from the logged values if servingSize > 0
+    let per100g = foodLog.per100g;
+    if (!per100g && foodLog.servingSize > 0 && foodLog.calories > 0) {
+      per100g = {
+        calories: (foodLog.calories / foodLog.servingSize) * 100,
+        carbs: (foodLog.carbs / foodLog.servingSize) * 100,
+        protein: (foodLog.protein / foodLog.servingSize) * 100,
+        fats: (foodLog.fats / foodLog.servingSize) * 100,
+      };
+    }
+    
+    const docToSave = { ...foodLog, per100g };
+    const result = await collection.insertOne(docToSave);
     const insertedDocument = await collection.findOne({
       _id: result.insertedId,
     });

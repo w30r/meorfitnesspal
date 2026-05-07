@@ -107,6 +107,7 @@ export default function FoodLogs() {
         ) : (
           meals.map((mealType) => {
             const filteredLogs = data.filter((x: FoodLog) => x.meal === mealType);
+            const totalCalories = filteredLogs.reduce((sum, log) => sum + (log.calories || 0), 0);
 
             return (
               <section key={mealType} className="flex flex-col gap-4">
@@ -117,8 +118,11 @@ export default function FoodLogs() {
                       {mealType}
                     </h2>
                   </div>
-                  <div>
-                    <span className="ml-auto text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {totalCalories.toFixed(0)} kcal
+                    </span>
+                    <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
                       {filteredLogs.length} items
                     </span>
                   </div>
