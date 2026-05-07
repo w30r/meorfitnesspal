@@ -145,14 +145,10 @@ export default function GoalPage() {
               value={selectedPlan.toString()}
               onChange={(val) => setSelectedPlan(parseInt(val))}
               orientation="horizontal"
-              className={{
-                wrapper: "grid grid-cols-2 gap-2",
-              }}
+              className="grid grid-cols-2 gap-2"
             >
               {macroPlans.map((plan, idx) => (
-                <Radio key={idx} value={idx.toString()} className={{
-                  base: "border-2 border-border rounded-2xl p-3 data-[selected=true]:border-primary data-[selected=true]:bg-primary/5",
-                }}>
+                <Radio key={idx} value={idx.toString()} className="border-2 border-border rounded-2xl p-3 data-[selected=true]:border-primary data-[selected=true]:bg-primary/5">
                   <div className="flex flex-col">
                     <Label className="text-sm font-bold">{plan.name}</Label>
                     <DescriptionRoot className="text-xs text-muted-foreground">

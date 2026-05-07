@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import type { Viewport } from "next";
+import BottomNav from "@/components/BottomNav";
 
 export const viewport: Viewport = {
   themeColor: "#000000",
@@ -71,11 +72,9 @@ export default function RootLayout({
         "dark",
       )}
     >
-      <body className="min-h-full flex flex-col">
-        <header className="text-xl font-bold text-foreground text-center border-b border-border py-4">
-          MeorFitnessPal
-        </header>
+      <body className="min-h-full flex flex-col pb-16">
         {children}
+        <BottomNav />
       </body>
     </html>
   );

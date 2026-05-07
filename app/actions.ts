@@ -64,7 +64,7 @@ export async function saveFoodLog(foodLog: FormData) {
   try {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
-    
+
     // Calculate per100g from the logged values if servingSize > 0
     let per100g = foodLog.per100g;
     if (!per100g && foodLog.servingSize > 0 && foodLog.calories > 0) {
@@ -75,7 +75,7 @@ export async function saveFoodLog(foodLog: FormData) {
         fats: (foodLog.fats / foodLog.servingSize) * 100,
       };
     }
-    
+
     const docToSave = { ...foodLog, per100g };
     const result = await collection.insertOne(docToSave);
     const insertedDocument = await collection.findOne({
@@ -115,6 +115,62 @@ export async function getTotalCaloriesByDate(date: string) {
     return JSON.parse(JSON.stringify(totalCalories));
   } catch (error) {
     return [{ _id: "takde", totalCalories: 1, status: "none" }];
+  }
+}
+
+// calculate streak (consecutive days with food logs)
+export async function getStreak() {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("foodlog");
+
+    // 1. Only fetch recent dates to save memory/bandwidth
+    const logs = (await collection
+      .find({})
+      .sort({ date: -1 }) // Get newest first
+      .limit(100) // Max possible streak in a year + buffer
+      .project({ date: 1, _id: 0 })
+      .toArray()) as { date: string }[];
+
+    if (!logs || logs.length === 0) return 0;
+    console.log("🚀 ~ getStreak ~ logs:", logs);
+
+    const uniqueDates = new Set(logs.map((l) => l.date));
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const formatDate = (d: Date) =>
+      `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+
+    let streak = 0;
+    let checkDate = new Date(today);
+
+    // 2. Check if the streak is active (either today or yesterday)
+    const todayStr = formatDate(today);
+    const yesterdayStr = formatDate(yesterday);
+
+    if (!uniqueDates.has(todayStr) && !uniqueDates.has(yesterdayStr)) {
+      return 0; // Streak is broken
+    }
+
+    // 3. Start checking from the most recent logged day
+    if (!uniqueDates.has(todayStr)) {
+      checkDate = yesterday;
+    }
+
+    while (uniqueDates.has(formatDate(checkDate))) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    return streak;
+  } catch (error) {
+    console.error("Failed to get streak", error);
+    return 0;
   }
 }
 
@@ -442,7 +498,9 @@ export async function getCombinedWeightAndCals() {
   const sortedDates = Array.from(allDates).sort((a, b) => {
     const [d1, m1, y1] = a.split("-").map(Number);
     const [d2, m2, y2] = b.split("-").map(Number);
-    return new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime();
+    return (
+      new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime()
+    );
   });
 
   // Build combined data with forward-filled weights
@@ -473,13 +531,13 @@ export async function getRecentFoods(limit = 20) {
   try {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
-    
+
     const foods = await collection
       .find({})
       .sort({ _id: -1 })
       .limit(limit)
       .toArray();
-    
+
     return JSON.parse(JSON.stringify(foods));
   } catch (error) {
     console.error("Failed to get recent foods", error);
@@ -491,11 +549,9 @@ export async function getFavoriteFoods() {
   try {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
-    
-    const foods = await collection
-      .find({ isFavorite: true })
-      .toArray();
-    
+
+    const foods = await collection.find({ isFavorite: true }).toArray();
+
     return JSON.parse(JSON.stringify(foods));
   } catch (error) {
     console.error("Failed to get favorite foods", error);
@@ -507,17 +563,17 @@ export async function toggleFavorite(foodId: string) {
   try {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
-    
+
     const food = await collection.findOne({ _id: new ObjectId(foodId) });
     if (!food) throw new Error("Food not found");
-    
+
     const newFavorite = !food.isFavorite;
-    
+
     await collection.updateOne(
       { _id: new ObjectId(foodId) },
-      { $set: { isFavorite: newFavorite } }
+      { $set: { isFavorite: newFavorite } },
     );
-    
+
     return newFavorite;
   } catch (error) {
     console.error("Failed to toggle favorite", error);

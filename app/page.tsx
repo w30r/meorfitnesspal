@@ -1,28 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  PlusCircle,
-  Target,
-  BarChart3,
   Calendar,
   Weight,
+  Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getFoodLogbyDate, getGoalData, getWeightLogs } from "./actions";
+import {
+  getFoodLogbyDate,
+  getGoalData,
+  getWeightLogs,
+  getStreak,
+} from "./actions";
 import KadUtama from "@/components/kadutama";
-import QuickAdd from "@/components/QuickAdd";
 import { cn } from "@/lib/utils";
 import { BsQuestion } from "react-icons/bs";
 
@@ -86,7 +80,10 @@ export default function Home() {
   const [foodLog, setFoodLog] = useState<FoodLogResponse | null>(null);
   const [isGoalLoading, setIsGoalLoading] = useState(true);
   const [weeklyWeightAvg, setWeeklyWeightAvg] = useState<number | null>(null);
-  const [prevWeekWeightAvg, setPrevWeekWeightAvg] = useState<number | null>(null);
+  const [prevWeekWeightAvg, setPrevWeekWeightAvg] = useState<number | null>(
+    null,
+  );
+  const [streak, setStreak] = useState(0);
 
   const isToday = formatDate(today) === formatDate(new Date());
 
@@ -118,7 +115,10 @@ export default function Home() {
   useEffect(() => {
     const fetchWeightData = async () => {
       try {
-        const weightData = await getWeightLogs();
+        const weightData = (await getWeightLogs()) as unknown as {
+          date: string;
+          weight: number;
+        }[];
         if (weightData && weightData.length > 0) {
           const now = new Date();
           const oneWeekAgo = new Date(now);
@@ -126,25 +126,29 @@ export default function Home() {
           const twoWeeksAgo = new Date(now);
           twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
-          const thisWeekEntries = weightData.filter((w: { date: string }) => {
+          const thisWeekEntries = weightData.filter((w) => {
             const parts = w.date.split("-");
             const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
             return d >= oneWeekAgo && d <= now;
           });
 
-          const lastWeekEntries = weightData.filter((w: { date: string }) => {
+          const lastWeekEntries = weightData.filter((w) => {
             const parts = w.date.split("-");
             const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
             return d >= twoWeeksAgo && d < oneWeekAgo;
           });
 
           if (thisWeekEntries.length > 0) {
-            const avg = thisWeekEntries.reduce((sum: number, w: { weight: number }) => sum + w.weight, 0) / thisWeekEntries.length;
+            const avg =
+              thisWeekEntries.reduce((sum, w) => sum + (w.weight || 0), 0) /
+              thisWeekEntries.length;
             setWeeklyWeightAvg(avg);
           }
 
           if (lastWeekEntries.length > 0) {
-            const avg = lastWeekEntries.reduce((sum: number, w: { weight: number }) => sum + w.weight, 0) / lastWeekEntries.length;
+            const avg =
+              lastWeekEntries.reduce((sum, w) => sum + (w.weight || 0), 0) /
+              lastWeekEntries.length;
             setPrevWeekWeightAvg(avg);
           }
         }
@@ -153,6 +157,19 @@ export default function Home() {
       }
     };
     fetchWeightData();
+  }, []);
+
+  useEffect(() => {
+    const fetchStreak = async () => {
+      try {
+        const streakCount = await getStreak();
+        console.log("🚀 ~ fetchStreak ~ streakCount:", streakCount);
+        setStreak(streakCount);
+      } catch {
+        console.error("Failed to get streak");
+      }
+    };
+    fetchStreak();
   }, []);
 
   const handlePrevDay = () => {
@@ -224,9 +241,9 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
+      <main className="max-w-2xl mx-auto px-4 pt-8 space-y-4">
         {/* Main Calorie Ring/Progress Card */}
-        <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-8 shadow-sm">
+        <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm">
           <div className="relative z-10 flex flex-col items-center text-center">
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
               Energy Balance
@@ -239,9 +256,9 @@ export default function Home() {
                 / {goal?.calories || 0}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">kcal consumed</p>
+            <p className="text-sm text-muted-foreground mt-0">kcal consumed</p>
 
-            <div className="w-full mt-8 space-y-2">
+            <div className="w-full mt-4 space-y-2">
               <div className="flex justify-between text-xs font-bold px-1">
                 <span className="text-primary">
                   {caloriePercentage}% of daily goal
@@ -314,17 +331,26 @@ export default function Home() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    This Week's Avg
+                    This Week&apos;s Avg
                   </p>
                   <p className="text-2xl font-black mt-1">
-                    {weeklyWeightAvg.toFixed(1)} <span className="text-sm font-medium text-muted-foreground">kg</span>
+                    {weeklyWeightAvg.toFixed(1)}{" "}
+                    <span className="text-sm font-medium text-muted-foreground">
+                      kg
+                    </span>
                   </p>
                   {prevWeekWeightAvg && (
-                    <p className={cn(
-                      "text-xs font-medium mt-1",
-                      weeklyWeightAvg < prevWeekWeightAvg ? "text-green-500" : "text-red-500"
-                    )}>
-                      {weeklyWeightAvg < prevWeekWeightAvg ? "↓" : "↑"} {Math.abs(weeklyWeightAvg - prevWeekWeightAvg).toFixed(1)}kg vs last week
+                    <p
+                      className={cn(
+                        "text-xs font-medium mt-1",
+                        weeklyWeightAvg < prevWeekWeightAvg
+                          ? "text-green-500"
+                          : "text-red-500",
+                      )}
+                    >
+                      {weeklyWeightAvg < prevWeekWeightAvg ? "↓" : "↑"}{" "}
+                      {Math.abs(weeklyWeightAvg - prevWeekWeightAvg).toFixed(1)}
+                      kg vs last week
                     </p>
                   )}
                 </div>
@@ -336,75 +362,30 @@ export default function Home() {
           </Link>
         )}
 
-        {/* Action Grid */}
-        <nav className="grid grid-cols-2 gap-2 pt-2">
-          <Link href={`/logfood/${formatDate(today)}`} className="group">
-            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-primary text-primary-foreground transition-transform active:scale-95 shadow-lg shadow-primary/20">
-              <PlusCircle className="h-7 w-7" />
-              <span className="text-xs font-bold uppercase tracking-tight">
-                Add Food
-              </span>
-            </div>
-          </Link>
-          <Link href={`/logweight`} className="group">
-            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-accent text-primary-foreground transition-transform active:scale-95 shadow-lg shadow-primary/20">
-              <PlusCircle className="h-7 w-7" />
-              <span className="text-xs font-bold uppercase tracking-tight">
-                Log Weight
-              </span>
-            </div>
-          </Link>
-
-          {/* <Dialog>
-            <DialogTrigger>T
-              <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-chart-5 border border-border transition-all hover:border-primary/50 active:scale-95">
-                <PlusCircle className="h-7 w-7 text-primary-foreground group-hover:text-primary transition-colors" />
-
-                <span className="text-xs font-bold uppercase tracking-tight text-primary-foreground">
-                  Quick Add
-                </span>
-              </div>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Quick Add</DialogTitle>
-                <DialogDescription>
-                  Put as many details as possible!
-                </DialogDescription>
-              </DialogHeader>
+        {/* Streak Counter */}
+        {streak > 0 && (
+          <section className="bg-card border mt-2 border-border rounded-[2.5rem] p-6 shadow-sm">
+            <div className="flex items-center justify-between">
               <div>
-                <QuickAdd />
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Current Streak
+                </p>
+                <p className="text-2xl font-black mt-1">
+                  {streak}{" "}
+                  <span className="text-sm font-medium text-muted-foreground">
+                    day{streak !== 1 ? "s" : ""}
+                  </span>
+                </p>
               </div>
-            </DialogContent>
-          </Dialog> */}
-
-          <Link href="/goals" className="group">
-            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-card border border-border transition-all hover:border-primary/50 active:scale-95">
-              <Target className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
-                Goals
-              </span>
+              <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <Flame className="h-5 w-5 text-orange-500" />
+              </div>
             </div>
-          </Link>
+          </section>
+        )}
 
-          <Link href="/memain" className="group">
-            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-card border border-border transition-all hover:border-primary/50 active:scale-95">
-              <BarChart3 className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
-                Stats
-              </span>
-            </div>
-          </Link>
-
-          <Link href="/weight" className="group col-span-2">
-            <div className="flex flex-col items-center justify-center gap-3 h-28 rounded-[2rem] bg-card border border-border transition-all hover:border-primary/50 active:scale-95">
-              <Weight className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">
-                Weight
-              </span>
-            </div>
-          </Link>
-        </nav>
+        {/* Spacer for bottom nav */}
+        <div className="h-20" />
       </main>
     </div>
   );
