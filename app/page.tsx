@@ -242,55 +242,58 @@ export default function Home() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
-        {/* Mini Stats Row - This Week's Avg + Streak */}
-        <div className="flex gap-3">
+        {/* Mini Stats Column - This Week's Avg + Streak */}
+        <div className="space-y-8">
           {/* Weekly Weight Average - Mini */}
           {weeklyWeightAvg && (
-            <Link href="/weight" className="flex-1">
-              <div className="bg-card border border-border rounded-2xl p-3 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <Weight className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Avg
-                  </span>
+            <Link href="/weight">
+              <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Weight className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      This Week&apos;s Avg
+                    </span>
+                  </div>
+                  {prevWeekWeightAvg && (
+                    <p
+                      className={cn(
+                        "text-xs font-medium",
+                        weeklyWeightAvg < prevWeekWeightAvg
+                          ? "text-green-500"
+                          : "text-red-500",
+                      )}
+                    >
+                      {weeklyWeightAvg < prevWeekWeightAvg ? "↓" : "↑"}{" "}
+                      {Math.abs(weeklyWeightAvg - prevWeekWeightAvg).toFixed(1)}
+                      kg
+                    </p>
+                  )}
                 </div>
-                <p className="text-lg font-black mt-0.5">
+                <p className="text-2xl font-black mt-1">
                   {weeklyWeightAvg.toFixed(1)}
-                  <span className="text-xs font-medium text-muted-foreground ml-1">
+                  <span className="text-sm font-medium text-muted-foreground ml-1">
                     kg
                   </span>
                 </p>
-                {prevWeekWeightAvg && (
-                  <p
-                    className={cn(
-                      "text-[12px] font-medium mt-0.5",
-                      weeklyWeightAvg < prevWeekWeightAvg
-                        ? "text-green-500"
-                        : "text-red-500",
-                    )}
-                  >
-                    {Math.abs(weeklyWeightAvg - prevWeekWeightAvg).toFixed(1)}kg
-                    {weeklyWeightAvg < prevWeekWeightAvg
-                      ? "↓ from previous week"
-                      : "↑ from previous week"}{" "}
-                  </p>
-                )}
               </div>
             </Link>
           )}
 
           {/* Streak - Mini */}
           {streak > 0 && (
-            <div className="flex-1 bg-card border border-border rounded-2xl p-3 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Flame className="h-3.5 w-3.5 text-orange-500" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Streak
-                </span>
+            <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm mt-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-4 w-4 text-orange-500" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Current Streak
+                  </span>
+                </div>
               </div>
-              <p className="text-lg font-black mt-0.5">
+              <p className="text-2xl font-black mt-1">
                 {streak}
-                <span className="text-xs font-medium text-muted-foreground ml-1">
+                <span className="text-sm font-medium text-muted-foreground ml-1">
                   day{streak !== 1 ? "s" : ""}
                 </span>
               </p>
