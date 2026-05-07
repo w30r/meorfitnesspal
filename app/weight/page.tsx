@@ -45,7 +45,7 @@ export default function WeightPage() {
 
     return data.filter((entry) => {
       const parts = entry.date.split("-");
-      const entryDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      const entryDate = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
       return entryDate >= startDate && entryDate <= endDate;
     });
   };
@@ -55,16 +55,20 @@ export default function WeightPage() {
     
     const weeks: WeeklyData[] = [];
     const sortedData = [...data].sort((a, b) => {
-      const dateA = new Date(`${a.date.split("-")[2]}-${a.date.split("-")[1]}-${a.date.split("-")[0]}`);
-      const dateB = new Date(`${b.date.split("-")[2]}-${b.date.split("-")[1]}-${b.date.split("-")[0]}`);
+      const pa = a.date.split("-");
+      const pb = b.date.split("-");
+      const dateA = new Date(Number(pa[2]), Number(pa[1]) - 1, Number(pa[0]));
+      const dateB = new Date(Number(pb[2]), Number(pb[1]) - 1, Number(pb[0]));
       return dateA.getTime() - dateB.getTime();
     });
 
-    let currentWeekStart = new Date(sortedData[0].date.split("-").reverse().join("-"));
+    const p0 = sortedData[0].date.split("-");
+    let currentWeekStart = new Date(Number(p0[2]), Number(p0[1]) - 1, Number(p0[0]));
     let currentWeekEntries: number[] = [sortedData[0].weight];
     
     for (let i = 1; i < sortedData.length; i++) {
-      const entryDate = new Date(sortedData[i].date.split("-").reverse().join("-"));
+      const pi = sortedData[i].date.split("-");
+      const entryDate = new Date(Number(pi[2]), Number(pi[1]) - 1, Number(pi[0]));
       const daysDiff = Math.floor((entryDate.getTime() - currentWeekStart.getTime()) / (1000 * 60 * 60 * 24));
       
       if (daysDiff < 7) {
@@ -102,7 +106,7 @@ export default function WeightPage() {
 
     const pastWeekEntries = data.filter((entry) => {
       const parts = entry.date.split("-");
-      const entryDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      const entryDate = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
       return entryDate >= weekAgo && entryDate <= today;
     });
 
@@ -121,7 +125,7 @@ export default function WeightPage() {
 
     const prevWeekEntries = data.filter((entry) => {
       const parts = entry.date.split("-");
-      const entryDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      const entryDate = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
       return entryDate >= twoWeeksAgo && entryDate < weekAgo;
     });
 
