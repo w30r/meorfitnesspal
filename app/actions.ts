@@ -2,6 +2,7 @@
 
 import { ObjectId } from "mongodb";
 import { connectToDatabase } from "./lib/mongodb";
+import { getUserId } from "./lib/session";
 import { revalidatePath } from "next/cache";
 
 export interface FoodEntry {
@@ -62,10 +63,12 @@ interface FormData {
 
 export async function saveFoodLog(foodLog: FormData) {
   try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
-    // Calculate per100g from the logged values if servingSize > 0
     let per100g = foodLog.per100g;
     if (!per100g && foodLog.servingSize > 0 && foodLog.calories > 0) {
       per100g = {
@@ -76,7 +79,7 @@ export async function saveFoodLog(foodLog: FormData) {
       };
     }
 
-    const docToSave = { ...foodLog, per100g };
+    const docToSave = { ...foodLog, userId, per100g };
     const result = await collection.insertOne(docToSave);
     const insertedDocument = await collection.findOne({
       _id: result.insertedId,
@@ -91,9 +94,12 @@ export async function saveFoodLog(foodLog: FormData) {
 //get food logs
 export async function getFoodLogs() {
   try {
+    const userId = await getUserId();
+    if (!userId) return [];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
-    const foodLogs = await collection.find({}).toArray();
+    const foodLogs = await collection.find({ userId }).toArray();
     return JSON.parse(JSON.stringify(foodLogs));
   } catch (error) {
     console.error("Failed to get food logs", error);
@@ -104,11 +110,14 @@ export async function getFoodLogs() {
 // get total calories by date
 export async function getTotalCaloriesByDate(date: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) return [{ _id: date, totalCalories: 0 }];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
     const totalCalories = await collection
       .aggregate([
-        { $match: { date: date } },
+        { $match: { date, userId } },
         { $group: { _id: "$date", totalCalories: { $sum: "$calories" } } },
       ])
       .toArray();
@@ -121,19 +130,20 @@ export async function getTotalCaloriesByDate(date: string) {
 // calculate streak (consecutive days with food logs)
 export async function getStreak() {
   try {
+    const userId = await getUserId();
+    if (!userId) return 0;
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
-    // 1. Only fetch recent dates to save memory/bandwidth
     const logs = (await collection
-      .find({})
-      .sort({ date: -1 }) // Get newest first
-      .limit(100) // Max possible streak in a year + buffer
+      .find({ userId })
+      .sort({ date: -1 })
+      .limit(100)
       .project({ date: 1, _id: 0 })
       .toArray()) as { date: string }[];
 
     if (!logs || logs.length === 0) return 0;
-    console.log("🚀 ~ getStreak ~ logs:", logs);
 
     const uniqueDates = new Set(logs.map((l) => l.date));
 
@@ -149,15 +159,13 @@ export async function getStreak() {
     let streak = 0;
     let checkDate = new Date(today);
 
-    // 2. Check if the streak is active (either today or yesterday)
     const todayStr = formatDate(today);
     const yesterdayStr = formatDate(yesterday);
 
     if (!uniqueDates.has(todayStr) && !uniqueDates.has(yesterdayStr)) {
-      return 0; // Streak is broken
+      return 0;
     }
 
-    // 3. Start checking from the most recent logged day
     if (!uniqueDates.has(todayStr)) {
       checkDate = yesterday;
     }
@@ -177,15 +185,17 @@ export async function getStreak() {
 // get total protein by date
 export async function getTotalProteinByDate(date: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) return [{ _id: date, totalProtein: 0 }];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
     const totalProtein = await collection
       .aggregate([
-        { $match: { date: date } },
+        { $match: { date, userId } },
         { $group: { _id: "$date", totalProtein: { $sum: "$protein" } } },
       ])
       .toArray();
-    console.log("Total Protein Data:", totalProtein); // Add logging here
     return JSON.parse(JSON.stringify(totalProtein));
   } catch (error) {
     console.error("Failed to get total protein by date", error);
@@ -196,15 +206,17 @@ export async function getTotalProteinByDate(date: string) {
 // get total carbs by date
 export async function getTotalCarbsByDate(date: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) return [{ _id: date, totalCarbs: 0 }];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
     const totalCarbs = await collection
       .aggregate([
-        { $match: { date: date } },
+        { $match: { date, userId } },
         { $group: { _id: "$date", totalCarbs: { $sum: "$carbs" } } },
       ])
       .toArray();
-    console.log("Total Carbs Data:", totalCarbs); // Add logging here
     return JSON.parse(JSON.stringify(totalCarbs));
   } catch (error) {
     console.error("Failed to get total carbs by date", error);
@@ -215,15 +227,17 @@ export async function getTotalCarbsByDate(date: string) {
 // get total fats by date
 export async function getTotalFatsByDate(date: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) return [{ _id: date, totalFats: 0 }];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
     const totalFats = await collection
       .aggregate([
-        { $match: { date: date } },
+        { $match: { date, userId } },
         { $group: { _id: "$date", totalFats: { $sum: "$fats" } } },
       ])
       .toArray();
-    console.log("Total Fats Data:", totalFats); // Add logging here
     return JSON.parse(JSON.stringify(totalFats));
   } catch (error) {
     console.error("Failed to get total fats by date", error);
@@ -234,9 +248,12 @@ export async function getTotalFatsByDate(date: string) {
 // get goal data
 export async function getGoalData() {
   try {
+    const userId = await getUserId();
+    if (!userId) return null;
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("goal");
-    const goalData = await collection.find({}).toArray();
+    const goalData = await collection.find({ userId }).toArray();
     return JSON.parse(JSON.stringify(goalData));
   } catch (error) {
     console.error("Failed to get goal data", error);
@@ -252,11 +269,15 @@ export async function updateMacrosAndCaloriesGoal(
   fats: number,
 ) {
   try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("goal");
     const result = await collection.updateOne(
-      {},
-      { $set: { calories, protein, carbs, fats } },
+      { userId },
+      { $set: { calories, protein, carbs, fats, userId } },
+      { upsert: true },
     );
     return result.modifiedCount;
   } catch (error) {
@@ -268,10 +289,13 @@ export async function updateMacrosAndCaloriesGoal(
 // get today's food log
 export async function getTodaysFoodLog() {
   try {
+    const userId = await getUserId();
+    if (!userId) return [];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
     const today = new Date().toISOString().split("T")[0];
-    const foodLog = await collection.find({ date: today }).toArray();
+    const foodLog = await collection.find({ date: today, userId }).toArray();
     return JSON.parse(JSON.stringify(foodLog));
   } catch (error) {
     console.error("Failed to get today's food log", error);
@@ -281,13 +305,14 @@ export async function getTodaysFoodLog() {
 
 export async function getFoodLogbyDate(date: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) return { logs: [], totalCalories: 0, totalCarbs: 0, totalProtein: 0, totalFats: 0 };
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
-    // 1. Fetch the logs
-    const foodLog = await collection.find({ date: date }).toArray();
+    const foodLog = await collection.find({ date, userId }).toArray();
 
-    // 2. Calculate totals using reduce
     const totals = foodLog.reduce(
       (acc, item) => {
         acc.totalCalories += item.calories || 0;
@@ -304,7 +329,6 @@ export async function getFoodLogbyDate(date: string) {
       },
     );
 
-    // 3. Return both the logs and the totals
     return {
       logs: JSON.parse(JSON.stringify(foodLog)),
       ...totals,
@@ -318,12 +342,14 @@ export async function getFoodLogbyDate(date: string) {
 // delete meal by ID
 export async function deleteMealById(mealId: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
-    const result = await collection.deleteOne({ _id: new ObjectId(mealId) });
+    const result = await collection.deleteOne({ _id: new ObjectId(mealId), userId });
 
-    // This clears the cache and fetches fresh data for the food logs page
     revalidatePath("/foodlogs/[date]", "page");
 
     return result.deletedCount;
@@ -336,25 +362,25 @@ export async function deleteMealById(mealId: string) {
 // last x number of food logs
 export async function getLatestFoodLogs(days: number) {
   try {
+    const userId = await getUserId();
+    if (!userId) return { success: true, data: [] };
+    
     const db = await connectToDatabase("meorfitnesspal");
 
-    // 1. Calculate the date threshold
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (days - 1)); // -1 to include today
+    startDate.setDate(startDate.getDate() - (days - 1));
     const startDateString = startDate.toISOString().split("T")[0];
 
-    // 2. Aggregate data
     const stats = await db
       .collection("foodlog")
       .aggregate([
         {
-          // Filter logs within our day range
           $match: {
             date: { $gte: startDateString },
+            userId,
           },
         },
         {
-          // Group by date and sum the macros
           $group: {
             _id: "$date",
             totalCalories: { $sum: "$calories" },
@@ -365,11 +391,9 @@ export async function getLatestFoodLogs(days: number) {
           },
         },
         {
-          // Order by most recent date first
           $sort: { _id: -1 },
         },
         {
-          // Format the output for the frontend
           $project: {
             _id: 0,
             date: "$_id",
@@ -388,7 +412,6 @@ export async function getLatestFoodLogs(days: number) {
       data: stats,
     };
   } catch (error) {
-    // Log the actual error on your server console for debugging
     console.error("Error in getLatestFoodLogs:", error);
     return {
       success: false,
@@ -400,11 +423,14 @@ export async function getLatestFoodLogs(days: number) {
 // 1. Fetch all weight logs (sorted by date for the graph)
 export async function getWeightLogs() {
   try {
+    const userId = await getUserId();
+    if (!userId) return [];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const logs = await db
       .collection("weightlog")
-      .find({})
-      .sort({ date: 1 }) // Sort ascending so the graph flows left-to-right
+      .find({ userId })
+      .sort({ date: 1 })
       .toArray();
 
     return logs.map((log) => ({
@@ -420,17 +446,19 @@ export async function getWeightLogs() {
 // 2. Add or Update weight for a specific date
 export async function upsertWeight(weight: number, date: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("weightlog");
 
-    // Use updateOne with upsert: true so it updates if date exists, else creates new
     await collection.updateOne(
-      { date: date },
-      { $set: { weight: weight, date: date } },
+      { date, userId },
+      { $set: { weight, date, userId } },
       { upsert: true },
     );
 
-    revalidatePath("/weight"); // Assuming your new page is at /weight
+    revalidatePath("/weight");
     return { success: true };
   } catch (error) {
     console.error("Failed to log weight:", error);
@@ -441,10 +469,13 @@ export async function upsertWeight(weight: number, date: string) {
 // 3. Delete a weight log
 export async function deleteWeightById(id: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
     const db = await connectToDatabase("meorfitnesspal");
     const result = await db
       .collection("weightlog")
-      .deleteOne({ _id: new ObjectId(id) });
+      .deleteOne({ _id: new ObjectId(id), userId });
 
     revalidatePath("/weight");
     return result.deletedCount;
@@ -455,10 +486,13 @@ export async function deleteWeightById(id: string) {
 }
 
 export async function getCombinedWeightAndCals() {
+  const userId = await getUserId();
+  if (!userId) return [];
+  
   const db = await connectToDatabase("meorfitnesspal");
 
-  const weightLogs = await db.collection("weightlog").find().toArray();
-  const foodLogs = await db.collection("foodlog").find().toArray();
+  const weightLogs = await db.collection("weightlog").find({ userId }).toArray();
+  const foodLogs = await db.collection("foodlog").find({ userId }).toArray();
 
   // Build daily calories from foodLogs
   const dailyCalories: Record<string, number> = {};
@@ -529,11 +563,14 @@ export async function getCombinedWeightAndCals() {
 
 export async function getRecentFoods(limit = 20) {
   try {
+    const userId = await getUserId();
+    if (!userId) return [];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
     const foods = await collection
-      .find({})
+      .find({ userId })
       .sort({ _id: -1 })
       .limit(limit)
       .toArray();
@@ -547,10 +584,13 @@ export async function getRecentFoods(limit = 20) {
 
 export async function getFavoriteFoods() {
   try {
+    const userId = await getUserId();
+    if (!userId) return [];
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
-    const foods = await collection.find({ isFavorite: true }).toArray();
+    const foods = await collection.find({ isFavorite: true, userId }).toArray();
 
     return JSON.parse(JSON.stringify(foods));
   } catch (error) {
@@ -561,22 +601,65 @@ export async function getFavoriteFoods() {
 
 export async function toggleFavorite(foodId: string) {
   try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
-    const food = await collection.findOne({ _id: new ObjectId(foodId) });
+    const food = await collection.findOne({ _id: new ObjectId(foodId), userId });
     if (!food) throw new Error("Food not found");
 
     const newFavorite = !food.isFavorite;
 
     await collection.updateOne(
-      { _id: new ObjectId(foodId) },
+      { _id: new ObjectId(foodId), userId },
       { $set: { isFavorite: newFavorite } },
     );
 
     return newFavorite;
   } catch (error) {
     console.error("Failed to toggle favorite", error);
+    throw error;
+  }
+}
+
+export async function claimExistingData() {
+  try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
+    const db = await connectToDatabase("meorfitnesspal");
+    
+    const foodlogCollection = db.collection("foodlog");
+    const weightlogCollection = db.collection("weightlog");
+    const goalCollection = db.collection("goal");
+    
+    const foodlogResult = await foodlogCollection.updateMany(
+      { userId: { $exists: false } },
+      { $set: { userId } }
+    );
+    
+    const weightlogResult = await weightlogCollection.updateMany(
+      { userId: { $exists: false } },
+      { $set: { userId } }
+    );
+    
+    const goalResult = await goalCollection.updateMany(
+      { userId: { $exists: false } },
+      { $set: { userId } }
+    );
+    
+    console.log(`Claimed ${foodlogResult.modifiedCount} foodlog, ${weightlogResult.modifiedCount} weightlog, ${goalResult.modifiedCount} goal entries`);
+    
+    return {
+      success: true,
+      foodlogClaimed: foodlogResult.modifiedCount,
+      weightlogClaimed: weightlogResult.modifiedCount,
+      goalClaimed: goalResult.modifiedCount,
+    };
+  } catch (error) {
+    console.error("Failed to claim existing data", error);
     throw error;
   }
 }
