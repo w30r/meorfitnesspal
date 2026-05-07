@@ -22,7 +22,7 @@ interface FoodCardProps {
   date?: string;
 }
 
-const FoodCard = ({ log, date }: FoodCardProps) => {
+const FoodCard = ({ log, onDelete }: FoodCardProps) => {
   // Calculate calories based on Atwater system: 4 kcal/g for protein/carbs, 9 kcal/g for fats
   const router = useRouter();
   const realCalories = (log.protein * 4 + log.carbs * 4 + log.fats * 9).toFixed(
@@ -33,6 +33,9 @@ const FoodCard = ({ log, date }: FoodCardProps) => {
     console.log(`deleting ${log.foodName}`);
     await deleteMealById(log._id!);
     router.refresh();
+    if (onDelete) {
+      onDelete(log._id!);
+    }
     console.log("routed!");
   };
 

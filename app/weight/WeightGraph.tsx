@@ -34,7 +34,17 @@ const WeightGraph = ({ data }: { data: any[] }) => {
             stroke="hsl(var(--border))"
           />
 
-          <XAxis dataKey="date" axisLine={false} tickLine={false} dy={10} />
+          <XAxis 
+            dataKey="date" 
+            axisLine={false} 
+            tickLine={false} 
+            dy={10}
+            tickFormatter={(value) => {
+              const [d, m, y] = value.split("-");
+              const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+              return `${d} ${months[parseInt(m) - 1]}`;
+            }}
+          />
 
           {/* Left Axis - Weight */}
           <YAxis yAxisId="left" domain={["dataMin - 2", "dataMax + 2"]} hide />

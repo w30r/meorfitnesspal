@@ -125,6 +125,10 @@ export default function Home() {
     setToday(nextDate); // Fixed: was prevDate
   };
 
+  const handleGoToToday = () => {
+    setToday(new Date());
+  };
+
   const caloriePercentage = goal
     ? Math.round(((foodLog?.totalCalories || 0) / goal.calories) * 100)
     : 0;
@@ -149,6 +153,16 @@ export default function Home() {
               <h1 className="text-sm font-bold uppercase tracking-wider">
                 {isToday ? "Today" : formatShortDate(formatDate(today))}
               </h1>
+              {!isToday && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGoToToday}
+                  className="text-[10px] h-6 px-2 font-medium"
+                >
+                  Today
+                </Button>
+              )}
             </div>
             {isToday && (
               <span className="text-[10px] text-muted-foreground font-medium">

@@ -6,7 +6,7 @@ import DateNavigation from "./DateNavigation";
 import FoodCard from "./FoodCard";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FoodLog {
   _id: string;
@@ -45,17 +45,24 @@ export default function FoodLogs() {
   const { date } = useParams();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<FoodLog[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const response = await getFoodLogbyDate(date as string);
       setData(response?.logs || []);
+      setLoading(false);
       console.log("🚀 ~ fetchData ~ response:", response);
     };
     fetchData();
   }, [date]);
 
   const meals = ["Breakfast", "Lunch", "Dinner", "Etc"];
+
+  const handleDeleteLog = (id: string) => {
+    setData((prev) => prev.filter((log) => log._id !== id));
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-12">
@@ -74,53 +81,70 @@ export default function FoodLogs() {
           <div className="">
             <DateNavigation date={date as string} />
           </div>
-          <div>
-            <Button>Prev</Button>
-            <Button>Next</Button>
-          </div>
         </div>
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 mt-8 flex flex-col gap-10">
-        {meals.map((mealType) => {
-          const filteredLogs = data.filter((x: FoodLog) => x.meal === mealType);
-
-          return (
-            <section key={mealType} className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 border-b border-border pb-2 justify-between">
-                <div className="flex gap-2 items-center justify-center">
-                  <Utensils className="h-5 w-5 text-primary" />
-                  <h2 className="text-2xl font-bold tracking-tight">
-                    {mealType}
-                  </h2>
-                </div>
-                <div>
-                  <span className="ml-auto text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
-                    {filteredLogs.length} items
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map((log: FoodLog) => (
-                    <FoodCard
-                      key={log._id}
-                      log={log}
-                      // onDelete={handleDeleteLog}
-                    />
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 rounded-xl border  border-border bg-muted/30">
-                    <p className="text-sm text-muted-foreground">
-                      No {mealType} logged yet.
-                    </p>
+        {loading ? (
+          <>
+            {meals.map((mealType) => (
+              <section key={mealType} className="flex flex-col gap-4">
+                <div className="flex items-center gap-2 border-b border-border pb-2 justify-between">
+                  <div className="flex gap-2 items-center justify-center">
+                    <Skeleton className="h-5 w-5" />
+                    <Skeleton className="h-8 w-24" />
                   </div>
-                )}
-              </div>
-            </section>
-          );
-        })}
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                </div>
+                <div className="grid gap-4">
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
+        ) : (
+          meals.map((mealType) => {
+            const filteredLogs = data.filter((x: FoodLog) => x.meal === mealType);
+
+            return (
+              <section key={mealType} className="flex flex-col gap-4">
+                <div className="flex items-center gap-2 border-b border-border pb-2 justify-between">
+                  <div className="flex gap-2 items-center justify-center">
+                    <Utensils className="h-5 w-5 text-primary" />
+                    <h2 className="text-2xl font-bold tracking-tight">
+                      {mealType}
+                    </h2>
+                  </div>
+                  <div>
+                    <span className="ml-auto text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
+                      {filteredLogs.length} items
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-4">
+                  {filteredLogs.length > 0 ? (
+                    filteredLogs.map((log: FoodLog) => (
+                      <FoodCard
+                        key={log._id}
+                        log={log}
+                        onDelete={handleDeleteLog}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 rounded-xl border  border-border bg-muted/30">
+                      <p className="text-sm text-muted-foreground">
+                        No {mealType} logged yet.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            );
+          })
+        )}
       </main>
     </div>
   );

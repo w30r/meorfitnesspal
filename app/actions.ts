@@ -14,6 +14,7 @@ export interface FoodEntry {
   fats: number;
   date: string;
   meal: string;
+  isFavorite?: boolean;
 }
 
 // Define the shape of the function response
@@ -378,6 +379,7 @@ export async function getCombinedWeightAndCals() {
   const weightLogs = await db.collection("weightlog").find().toArray();
   const foodLogs = await db.collection("foodlog").find().toArray();
 
+  // Build daily calories from foodLogs
   const dailyCalories: Record<string, number> = {};
 
   foodLogs.forEach((log) => {
@@ -399,24 +401,101 @@ export async function getCombinedWeightAndCals() {
       (dailyCalories[normalizedKey] || 0) + totalCals;
   });
 
-  const combined = weightLogs
-    .map((w) => {
-      // Normalize weight date key to match ("28-04-2026" -> "28-4-2026")
-      const normalizedWeightDate = w.date.split("-").map(Number).join("-");
+  // Build daily weights from weightLogs
+  const dailyWeights: Record<string, number> = {};
+  weightLogs.forEach((w) => {
+    const normalizedWeightDate = w.date.split("-").map(Number).join("-");
+    dailyWeights[normalizedWeightDate] = w.weight;
+  });
 
-      return {
-        date: w.date,
-        weight: w.weight,
-        calories: Math.round(dailyCalories[normalizedWeightDate] || 0),
-      };
-    })
-    .sort((a, b) => {
-      const [d1, m1, y1] = a.date.split("-").map(Number);
-      const [d2, m2, y2] = b.date.split("-").map(Number);
-      return (
-        new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime()
-      );
-    });
+  // Collect all unique dates from both weightLogs and foodLogs
+  const allDates = new Set<string>();
+  Object.keys(dailyCalories).forEach((d) => allDates.add(d));
+  Object.keys(dailyWeights).forEach((d) => allDates.add(d));
+
+  // Sort dates chronologically
+  const sortedDates = Array.from(allDates).sort((a, b) => {
+    const [d1, m1, y1] = a.split("-").map(Number);
+    const [d2, m2, y2] = b.split("-").map(Number);
+    return new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime();
+  });
+
+  // Build combined data with forward-filled weights
+  let lastKnownWeight: number | null = null;
+  const combined = sortedDates.map((date) => {
+    const calories = Math.round(dailyCalories[date] || 0);
+    const weight = dailyWeights[date] ?? null;
+
+    // Forward-fill weight: use last known weight if current is null
+    if (weight !== null) {
+      lastKnownWeight = weight;
+    }
+
+    // For display, use the date string as-is
+    const displayDate = date.split("-").map(Number).join("-");
+
+    return {
+      date: displayDate,
+      weight: lastKnownWeight,
+      calories,
+    };
+  });
 
   return combined;
+}
+
+export async function getRecentFoods(limit = 20) {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("foodlog");
+    
+    const foods = await collection
+      .find({})
+      .sort({ _id: -1 })
+      .limit(limit)
+      .toArray();
+    
+    return JSON.parse(JSON.stringify(foods));
+  } catch (error) {
+    console.error("Failed to get recent foods", error);
+    throw error;
+  }
+}
+
+export async function getFavoriteFoods() {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("foodlog");
+    
+    const foods = await collection
+      .find({ isFavorite: true })
+      .toArray();
+    
+    return JSON.parse(JSON.stringify(foods));
+  } catch (error) {
+    console.error("Failed to get favorite foods", error);
+    throw error;
+  }
+}
+
+export async function toggleFavorite(foodId: string) {
+  try {
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("foodlog");
+    
+    const food = await collection.findOne({ _id: new ObjectId(foodId) });
+    if (!food) throw new Error("Food not found");
+    
+    const newFavorite = !food.isFavorite;
+    
+    await collection.updateOne(
+      { _id: new ObjectId(foodId) },
+      { $set: { isFavorite: newFavorite } }
+    );
+    
+    return newFavorite;
+  } catch (error) {
+    console.error("Failed to toggle favorite", error);
+    throw error;
+  }
 }

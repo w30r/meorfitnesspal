@@ -51,9 +51,9 @@ export default function LogWeightPage() {
               <input
                 name="weight"
                 type="number"
-                step="0.1"
+                step="0.01"
                 required
-                placeholder="00.0"
+                placeholder="00.00"
                 className="w-full text-6xl font-black bg-transparent py-4 outline-none placeholder:text-muted/20 appearance-none"
                 autoFocus
               />
