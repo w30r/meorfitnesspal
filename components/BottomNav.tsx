@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PlusCircle, Scale, Home as HomeIcon, Utensils, Menu } from "lucide-react";
+import {
+  PlusCircle,
+  Scale,
+  Home as HomeIcon,
+  Utensils,
+  Menu,
+} from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Target, BarChart3 } from "lucide-react";
@@ -23,34 +29,34 @@ export default function BottomNav() {
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-2">
-          <Link 
-            href="/" 
-            className={`flex flex-col items-center gap-1 ${pathname === '/' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+        <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-2 mb-4">
+          <Link
+            href="/"
+            className={`flex flex-col items-center gap-1 ${pathname === "/" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
           >
             <HomeIcon className="h-6 w-6" />
             <span className="text-[10px] font-medium">Home</span>
           </Link>
-          
-          <Link 
-            href={`/logfood/${formatDate(today)}`} 
+
+          <Link
+            href={`/logfood/${formatDate(today)}`}
             className="flex flex-col items-center gap-1 -mt-8"
           >
             <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
               <Utensils className="h-8 w-8 text-primary-foreground" />
             </div>
           </Link>
-          
-          <Link 
-            href="/weight" 
-            className={`flex flex-col items-center gap-1 ${pathname === '/weight' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+
+          <Link
+            href="/weight"
+            className={`flex flex-col items-center gap-1 ${pathname === "/weight" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
           >
             <Scale className="h-6 w-6" />
             <span className="text-[10px] font-medium">Weight</span>
           </Link>
-          
-          <button 
-            onClick={() => setShowMoreMenu(!showMoreMenu)} 
+
+          <button
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
             className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
           >
             <Menu className="h-6 w-6" />
@@ -58,30 +64,36 @@ export default function BottomNav() {
           </button>
         </div>
       </div>
-      
+
       {/* More Menu Overlay */}
       {showMoreMenu && (
-        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowMoreMenu(false)}>
-          <div className="fixed bottom-20 left-4 right-4 max-w-2xl mx-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setShowMoreMenu(false)}
+        >
+          <div
+            className="fixed bottom-20 left-4 right-4 max-w-2xl mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="bg-card border border-border rounded-2xl p-2 shadow-lg space-y-1">
-              <Link 
-                href="/goals" 
+              <Link
+                href="/goals"
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
                 onClick={() => setShowMoreMenu(false)}
               >
                 <Target className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">Goals</span>
               </Link>
-              <Link 
-                href="/memain" 
+              <Link
+                href="/memain"
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
                 onClick={() => setShowMoreMenu(false)}
               >
                 <BarChart3 className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">Stats</span>
               </Link>
-              <Link 
-                href="/logweight" 
+              <Link
+                href="/logweight"
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
                 onClick={() => setShowMoreMenu(false)}
               >
