@@ -34,20 +34,41 @@ const WeightGraph = ({ data }: { data: any[] }) => {
             stroke="hsl(var(--border))"
           />
 
-          <XAxis 
-            dataKey="date" 
-            axisLine={false} 
-            tickLine={false} 
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
             dy={10}
             tickFormatter={(value) => {
               const [d, m, y] = value.split("-");
-              const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+              const months = [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+              ];
               return `${d} ${months[parseInt(m) - 1]}`;
             }}
           />
 
           {/* Left Axis - Weight */}
-          <YAxis yAxisId="left" domain={["dataMin - 2", "dataMax + 2"]} hide />
+          <YAxis
+            yAxisId="left"
+            domain={["dataMin - 2", "dataMax + 2"]}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 10, fill: "white" }}
+            tickFormatter={(value) => `${value}`}
+            tickCount={8}
+          />
 
           {/* Right Axis - Calories */}
           <YAxis yAxisId="right" orientation="right" hide />

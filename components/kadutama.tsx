@@ -38,6 +38,7 @@ const MacroCircle = ({ label, current, goal, color }: MacroCircleProps) => {
         <p className="text-lg font-black leading-none">
           {current.toFixed(1)}
           <span className="text-[10px] font-medium ml-0.5">g</span>
+          <span className="text-xs font-medium text-muted-foreground"> / {goal.toFixed(0)}g</span>
         </p>
         <p
           className={cn(

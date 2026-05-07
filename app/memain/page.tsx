@@ -221,10 +221,10 @@ export default function Page() {
         <span>Less</span>
         <div className="flex gap-1">
           <div className="h-3 w-3 rounded-sm bg-muted/20" />
-          <div className="h-3 w-3 rounded-sm bg-emerald-900/30" />
-          <div className="h-3 w-3 rounded-sm bg-emerald-700/50" />
-          <div className="h-3 w-3 rounded-sm bg-emerald-500" />
-          <div className="h-3 w-3 rounded-sm bg-emerald-400" />
+          <div className="h-3 w-3 rounded-sm bg-purple-900/30" />
+          <div className="h-3 w-3 rounded-sm bg-purple-700/50" />
+          <div className="h-3 w-3 rounded-sm bg-purple-500" />
+          <div className="h-3 w-3 rounded-sm bg-purple-400" />
         </div>
         <span>More (Goal)</span>
       </div>

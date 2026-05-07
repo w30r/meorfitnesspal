@@ -1,299 +1,218 @@
-// app/goals/[goalType]/page.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { getGoalData, updateMacrosAndCaloriesGoal } from "../actions";
 import { RadioGroup, Radio, Label, DescriptionRoot } from "@heroui/react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import { ChevronLeft, Save } from "lucide-react";
 
-function calculateMacros(
-  totalCalories: number,
-  targetProtein: number,
-  targetCarbs: number,
-  targetFats: number,
-) {
-  const proteinCalories = targetProtein * 4;
-  const carbsCalories = targetCarbs * 4;
-  const fatsCalories = targetFats * 9;
-
-  const remainingCalories =
-    totalCalories - (proteinCalories + carbsCalories + fatsCalories);
-
-  if (remainingCalories < 0) {
-    // If the remaining calories are negative, adjust the macros
-    const totalMacros = targetProtein + targetCarbs + targetFats;
-    const ratio = Math.abs(remainingCalories) / (totalMacros * 4);
-
-    targetProtein -= ratio * targetProtein;
-    targetCarbs -= ratio * targetCarbs;
-    targetFats -= ratio * targetFats;
-  }
-
-  return {
-    targetProtein,
-    targetCarbs,
-    targetFats,
-  };
+interface Goal {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
 }
+
+interface MacroPlan {
+  name: string;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+const macroPlans: MacroPlan[] = [
+  { name: "Balanced", protein: 30, carbs: 40, fats: 30 },
+  { name: "High Protein", protein: 40, carbs: 30, fats: 30 },
+  { name: "Low Carb", protein: 35, carbs: 20, fats: 45 },
+  { name: "High Carb", protein: 25, carbs: 50, fats: 25 },
+];
 
 export default function GoalPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [plan, setPlan] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<number>(0);
   const [formData, setFormData] = useState({
-    targetCalories: 0,
-    targetCarbs: 0,
-    targetProtein: 0,
-    targetFats: 0,
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 200,
+    targetFats: 65,
   });
-  const [proteinRatio, setProteinratio] = useState(0);
-  const [carbRatio, setCarbratio] = useState(0);
-  const [fatRatio, setFatRatio] = useState(0);
-
-  useEffect(() => {
-    if (plan === "optimal") {
-      setProteinratio(0.3);
-      setCarbratio(0.4);
-      setFatRatio(0.3);
-    } else if (plan === "high-protein") {
-      setProteinratio(0.35);
-      setCarbratio(0.35);
-      setFatRatio(0.3);
-    } else if (plan === "performance") {
-      setProteinratio(0.25);
-      setCarbratio(0.5);
-      setFatRatio(0.25);
-    }
-  }, [plan]);
 
   useEffect(() => {
     const fetchGoalData = async () => {
       const goalData = await getGoalData();
-      console.log("🚀 ~ fetchGoalData ~ goalData:", goalData);
-      if (goalData) {
+      if (goalData && goalData[0]) {
+        const g = goalData[0] as Goal;
         setFormData({
-          ...formData,
-          targetCalories: goalData[0].calories,
-          targetCarbs: goalData[0].carbs,
-          targetProtein: goalData[0].protein,
-          targetFats: goalData[0].fats,
+          targetCalories: g.calories,
+          targetProtein: g.protein,
+          targetCarbs: g.carbs,
+          targetFats: g.fats,
         });
-        setIsLoading(false);
+
+        const planIndex = macroPlans.findIndex(
+          (p) =>
+            Math.abs(p.protein - (g.protein * 4 / g.calories) * 100) < 5 &&
+            Math.abs(p.carbs - (g.carbs * 4 / g.calories) * 100) < 5
+        );
+        if (planIndex >= 0) setSelectedPlan(planIndex);
       }
+      setIsLoading(false);
     };
-
-    const calculateRatios = () => {
-      setCarbratio((formData.targetCarbs / formData.targetCalories) * 100);
-      setProteinratio((formData.targetProtein / formData.targetCalories) * 100);
-      setFatRatio((formData.targetFats / formData.targetCalories) * 100);
-    };
-
-    console.log("🚀 ~ fetchGoalData ~ formData:", formData);
     fetchGoalData();
-    calculateRatios();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (e: { target: { name: string; value: number } }) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  useEffect(() => {
+    const plan = macroPlans[selectedPlan];
+    const calories = formData.targetCalories || 1;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFormData((prev) => ({
+      ...prev,
+      targetProtein: Math.round((calories * plan.protein) / 100 / 4),
+      targetCarbs: Math.round((calories * plan.carbs) / 100 / 4),
+      targetFats: Math.round((calories * plan.fats) / 100 / 9),
+    }));
+  }, [selectedPlan, formData.targetCalories]);
+
+  const handleChange = (field: string, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setFormData((prev) => ({ ...prev, [field]: numValue }));
   };
 
-  const handleSliderChange = (name: string, value: number) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you can handle the form submission, e.g., send data to an API
-    console.log("Form Data:", formData);
-    // Update the goal data
     await updateMacrosAndCaloriesGoal(
-      formData.targetCalories as number,
+      formData.targetCalories,
       formData.targetProtein,
       formData.targetCarbs,
-      formData.targetFats,
+      formData.targetFats
     );
-
     router.push("/");
   };
 
-  const totalCalories = formData.targetCalories ? formData.targetCalories : 0;
-  const targetProtein = formData.targetProtein ? formData.targetProtein : 0;
-  const targetCarbs = formData.targetCarbs ? formData.targetCarbs : 0;
-  const targetFats = formData.targetFats ? formData.targetFats : 0;
+  const calorieBreakdown =
+    (formData.targetProtein * 4) +
+    (formData.targetCarbs * 4) +
+    (formData.targetFats * 9);
 
-  // const limitedMacros = calculateMacros(
-  //   totalCalories,
-  //   targetProtein,
-  //   targetCarbs,
-  //   targetFats,
-  // );
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background dark:bg-background py-16 px-8 transition-all duration-300 md:px-64">
-      {isLoading ? (
-        <h1>Loading...</h1>
-      ) : (
-        <>
-          <div className="place-self-start text-4xl font-bold mb-2 text-gray-800 dark:text-white">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-sm border-b border-border">
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Button variant="ghost" size="icon" asChild className="rounded-full">
             <Link href="/">
-              <p>back</p>
+              <ChevronLeft className="h-5 w-5" />
             </Link>
-            Set Goal
-            <h2 className="text-xs">proteinratio: {proteinRatio}</h2>
-            <h2 className="text-xs">carbratio: {carbRatio}</h2>
-            <h2 className="text-xs">fatratio: {fatRatio}</h2>
-          </div>
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col space-y-2 flex-1"
-          >
-            <div className="flex flex-col">
-              <label
-                htmlFor="targetCalories"
-                className="text-lg font-medium mb-2"
-              >
-                Target Calories
-              </label>
+          </Button>
+          <h1 className="text-lg font-bold">Set Goals</h1>
+          <div className="w-9" />
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto px-4 pt-8 space-y-6">
+        <section className="bg-card border border-border rounded-[2.5rem] p-6 shadow-sm space-y-6">
+          <div>
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Daily Calorie Target
+            </label>
+            <div className="mt-2 flex items-baseline gap-1">
               <Input
                 type="number"
-                id="targetCalories"
-                name="targetCalories"
                 value={formData.targetCalories}
-                onChange={() => handleChange}
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2 mb-4 w-24 text-center"
+                onChange={(e) => handleChange("targetCalories", e.target.value)}
+                className="text-4xl font-black border-0 bg-transparent px-0 h-auto w-32 focus:ring-0 focus:outline-none focus:border-b-2 focus:border-primary"
               />
+              <span className="text-lg font-medium text-muted-foreground">kcal</span>
             </div>
-            <div className="flex flex-col gap-4 bg-secondary rounded-3xl p-4 pb-6 outline-2 outline-primary">
-              <Label className="font-bold text-xl underline">
-                Choose Macro Plan
-              </Label>
-              <RadioGroup
-                onChange={setPlan}
-                defaultValue={plan}
-                name="macro-plan-orientation"
-                orientation="horizontal"
-              >
-                <Radio value="optimal">
-                  <Radio.Control>
-                    <Radio.Indicator />
-                  </Radio.Control>
-                  <Radio.Content>
-                    <Label>Optimal Balance</Label>
-                    <DescriptionRoot>30% P, 40% C, 30% F</DescriptionRoot>
-                  </Radio.Content>
-                </Radio>
-                <Radio value="high-protein">
-                  <Radio.Control>
-                    <Radio.Indicator />
-                  </Radio.Control>
-                  <Radio.Content>
-                    <Label>High-Protein Focus</Label>
-                    <DescriptionRoot>35% P, 35% C, 30% F</DescriptionRoot>
-                  </Radio.Content>
-                </Radio>
-                <Radio value="performance">
-                  <Radio.Control>
-                    <Radio.Indicator />
-                  </Radio.Control>
-                  <Radio.Content>
-                    <Label>Performance/Active</Label>
-                    <DescriptionRoot>25% P, 50% C, 25% F</DescriptionRoot>
-                  </Radio.Content>
-                </Radio>
-              </RadioGroup>
-            </div>
+          </div>
 
-            <div>
-              <label
-                htmlFor="targetProtein"
-                className="text-lg font-medium mb-2"
-              >
-                Target Protein (
-                {((proteinRatio * formData.targetCalories) / 4).toFixed(1)}g)
-              </label>
-              <Slider
-                defaultValue={[proteinRatio]}
-                disabled
-                min={0}
-                max={0.5}
-                step={0.1}
-                value={[proteinRatio]}
-                // onValueChange={(value) =>
-                //   handleSliderChange("targetProtein", value[0])
-                // }
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label htmlFor="targetCarbs" className="text-lg font-medium mb-2">
-                Target Carbs (
-                {((carbRatio * formData.targetCalories) / 4).toFixed(1)}g)
-              </label>
-              <Slider
-                defaultValue={[carbRatio]}
-                disabled
-                min={0}
-                max={0.5}
-                step={1}
-                value={[carbRatio]}
-                onValueChange={(value) =>
-                  handleSliderChange("targetCarbs", value[0])
-                }
-                className="w-full"
-              />
-            </div>
+          <div className="space-y-3">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Macro Split
+            </label>
+            <RadioGroup
+              value={selectedPlan.toString()}
+              onChange={(val) => setSelectedPlan(parseInt(val))}
+              orientation="horizontal"
+              className={{
+                wrapper: "grid grid-cols-2 gap-2",
+              }}
+            >
+              {macroPlans.map((plan, idx) => (
+                <Radio key={idx} value={idx.toString()} className={{
+                  base: "border-2 border-border rounded-2xl p-3 data-[selected=true]:border-primary data-[selected=true]:bg-primary/5",
+                }}>
+                  <div className="flex flex-col">
+                    <Label className="text-sm font-bold">{plan.name}</Label>
+                    <DescriptionRoot className="text-xs text-muted-foreground">
+                      {plan.protein}% P / {plan.carbs}% C / {plan.fats}% F
+                    </DescriptionRoot>
+                  </div>
+                </Radio>
+              ))}
+            </RadioGroup>
+          </div>
+        </section>
 
-            <div>
-              <label htmlFor="targetFats" className="text-lg font-medium mb-2">
-                Target Fats (
-                {((fatRatio * formData.targetCalories) / 9).toFixed(1)}g)
-              </label>
-              <Slider
-                defaultValue={[fatRatio]}
-                disabled
-                min={0}
-                max={0.5}
-                step={1}
-                value={[fatRatio]}
-                onValueChange={(value) =>
-                  handleSliderChange("targetFats", value[0])
-                }
-                className="w-full"
-              />
+        <section className="bg-card border border-border rounded-[2.5rem] p-6 shadow-sm space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Daily Targets
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-secondary/50 rounded-2xl">
+              <p className="text-[10px] font-bold uppercase text-success mb-1">Protein</p>
+              <p className="text-2xl font-black">{formData.targetProtein}</p>
+              <p className="text-xs text-muted-foreground">grams</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {(formData.targetProtein * 4).toFixed(0)} kcal
+              </p>
             </div>
-            {/* <div>
-              <label
-                htmlFor="totalCalories"
-                className="text-lg font-medium mb-2"
-              >
-                Total Calories
-              </label>
-              <input
-                type="number"
-                id="totalCalories"
-                name="totalCalories"
-                value={totalCalories}
-                readOnly
-                className="border border-gray-300 dark:border-gray-700 rounded px-4 py-2"
-              />
-            </div> */}
-            <Button type="submit" className="mt-12">
-              Save Goal
-            </Button>
-          </form>
-        </>
-      )}
+            <div className="text-center p-4 bg-secondary/50 rounded-2xl">
+              <p className="text-[10px] font-bold uppercase text-danger mb-1">Carbs</p>
+              <p className="text-2xl font-black">{formData.targetCarbs}</p>
+              <p className="text-xs text-muted-foreground">grams</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {(formData.targetCarbs * 4).toFixed(0)} kcal
+              </p>
+            </div>
+            <div className="text-center p-4 bg-secondary/50 rounded-2xl">
+              <p className="text-[10px] font-bold uppercase text-warning mb-1">Fats</p>
+              <p className="text-2xl font-black">{formData.targetFats}</p>
+              <p className="text-xs text-muted-foreground">grams</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {(formData.targetFats * 9).toFixed(0)} kcal
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t">
+            <span>Total from macros:</span>
+            <span className={calorieBreakdown > formData.targetCalories ? "text-destructive font-medium" : ""}>
+              {calorieBreakdown.toFixed(0)} / {formData.targetCalories} kcal
+            </span>
+          </div>
+        </section>
+
+        <Button
+          onClick={handleSubmit}
+          className="w-full h-14 text-lg font-bold rounded-2xl"
+        >
+          <Save className="mr-2 h-5 w-5" />
+          Save Goals
+        </Button>
+      </main>
     </div>
   );
 }

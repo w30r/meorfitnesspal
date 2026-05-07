@@ -20,7 +20,7 @@ import {
   Weight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getFoodLogbyDate, getGoalData } from "./actions";
+import { getFoodLogbyDate, getGoalData, getWeightLogs } from "./actions";
 import KadUtama from "@/components/kadutama";
 import QuickAdd from "@/components/QuickAdd";
 import { cn } from "@/lib/utils";
@@ -85,6 +85,8 @@ export default function Home() {
   const [goal, setGoal] = useState<Goal | null>(null);
   const [foodLog, setFoodLog] = useState<FoodLogResponse | null>(null);
   const [isGoalLoading, setIsGoalLoading] = useState(true);
+  const [weeklyWeightAvg, setWeeklyWeightAvg] = useState<number | null>(null);
+  const [prevWeekWeightAvg, setPrevWeekWeightAvg] = useState<number | null>(null);
 
   const isToday = formatDate(today) === formatDate(new Date());
 
@@ -111,6 +113,46 @@ export default function Home() {
       }
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchWeightData = async () => {
+      try {
+        const weightData = await getWeightLogs();
+        if (weightData && weightData.length > 0) {
+          const now = new Date();
+          const oneWeekAgo = new Date(now);
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          const twoWeeksAgo = new Date(now);
+          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+          const thisWeekEntries = weightData.filter((w: { date: string }) => {
+            const parts = w.date.split("-");
+            const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            return d >= oneWeekAgo && d <= now;
+          });
+
+          const lastWeekEntries = weightData.filter((w: { date: string }) => {
+            const parts = w.date.split("-");
+            const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            return d >= twoWeeksAgo && d < oneWeekAgo;
+          });
+
+          if (thisWeekEntries.length > 0) {
+            const avg = thisWeekEntries.reduce((sum: number, w: { weight: number }) => sum + w.weight, 0) / thisWeekEntries.length;
+            setWeeklyWeightAvg(avg);
+          }
+
+          if (lastWeekEntries.length > 0) {
+            const avg = lastWeekEntries.reduce((sum: number, w: { weight: number }) => sum + w.weight, 0) / lastWeekEntries.length;
+            setPrevWeekWeightAvg(avg);
+          }
+        }
+      } catch {
+        console.error("Failed to get weight data");
+      }
+    };
+    fetchWeightData();
   }, []);
 
   const handlePrevDay = () => {
@@ -264,6 +306,35 @@ export default function Home() {
             />
           )}
         </section>
+
+        {/* Weekly Weight Average */}
+        {weeklyWeightAvg && (
+          <Link href="/weight">
+            <section className="bg-card border border-border rounded-[2.5rem] p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    This Week's Avg
+                  </p>
+                  <p className="text-2xl font-black mt-1">
+                    {weeklyWeightAvg.toFixed(1)} <span className="text-sm font-medium text-muted-foreground">kg</span>
+                  </p>
+                  {prevWeekWeightAvg && (
+                    <p className={cn(
+                      "text-xs font-medium mt-1",
+                      weeklyWeightAvg < prevWeekWeightAvg ? "text-green-500" : "text-red-500"
+                    )}>
+                      {weeklyWeightAvg < prevWeekWeightAvg ? "↓" : "↑"} {Math.abs(weeklyWeightAvg - prevWeekWeightAvg).toFixed(1)}kg vs last week
+                    </p>
+                  )}
+                </div>
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Weight className="h-5 w-5 text-primary" />
+                </div>
+              </div>
+            </section>
+          </Link>
+        )}
 
         {/* Action Grid */}
         <nav className="grid grid-cols-2 gap-2 pt-2">
