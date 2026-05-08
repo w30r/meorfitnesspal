@@ -11,7 +11,7 @@ import { FaPlus } from "react-icons/fa6";
 import { redirect, useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, UtensilsCrossed } from "lucide-react";
 import FoodCard from "./FoodCard";
 import Suggestions from "./Suggestions";
 
@@ -73,6 +73,10 @@ const getPer100g = (food: FoodEntry, serving: number): Per100g => {
   return { calories: 0, carbs: 0, protein: 0, fats: 0 };
 };
 
+const capitalizeWords = (str: string): string => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 export default function LogPage() {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -100,6 +104,7 @@ export default function LogPage() {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [favorites, setFavorites] = useState<SuggestionFood[]>([]);
   const [recent, setRecent] = useState<SuggestionFood[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
   useEffect(() => {
     import("../../actions").then(({ getRecentFoods, getFavoriteFoods }) => {
@@ -107,6 +112,7 @@ export default function LogPage() {
         .then(([r, f]) => {
           setRecent(r || []);
           setFavorites(f || []);
+          setSuggestionsLoading(false);
         })
         .catch(console.error);
     });
@@ -142,7 +148,7 @@ export default function LogPage() {
       ...prev,
       {
         id,
-        foodName: food.foodName,
+        foodName: capitalizeWords(food.foodName),
         servingSize: serving,
         calories: p100 ? (p100.calories / 100) * serving : food.calories,
         carbs: p100 ? (p100.carbs / 100) * serving : food.carbs,
@@ -174,7 +180,19 @@ export default function LogPage() {
     setFoods((prev) =>
       prev.map((f) => {
         if (f.id !== foodId) return f;
-        const p100 = f.per100g || getPer100g(f, f.servingSize);
+        
+        let p100 = f.per100g;
+        if (!p100 && f.servingSize > 0 && f.calories > 0) {
+          p100 = {
+            calories: (f.calories / f.servingSize) * 100,
+            carbs: (f.carbs / f.servingSize) * 100,
+            protein: (f.protein / f.servingSize) * 100,
+            fats: (f.fats / f.servingSize) * 100,
+          };
+        }
+        
+        if (!p100) return { ...f, servingSize: grams };
+        
         return {
           ...f,
           servingSize: grams,
@@ -182,6 +200,7 @@ export default function LogPage() {
           carbs: (p100.carbs / 100) * grams,
           protein: (p100.protein / 100) * grams,
           fats: (p100.fats / 100) * grams,
+          per100g: p100,
         };
       }),
     );
@@ -193,12 +212,27 @@ export default function LogPage() {
   ) => {
     const { name, value } = e.target;
     const numFields = ["servingSize", "calories", "carbs", "protein", "fats"];
+    const processedValue = name === "foodName" ? capitalizeWords(value) : value;
     setFoods((prev) =>
-      prev.map((f) =>
-        f.id === foodId
-          ? { ...f, [name]: numFields.includes(name) ? Number(value) : value }
-          : f,
-      ),
+      prev.map((f) => {
+        if (f.id !== foodId) return f;
+        
+        const updated = {
+          ...f,
+          [name]: numFields.includes(name) ? Number(value) : processedValue,
+        };
+        
+        if ((name === "calories" || name === "carbs" || name === "protein" || name === "fats") && updated.servingSize > 0) {
+          updated.per100g = {
+            calories: (updated.calories / updated.servingSize) * 100,
+            carbs: (updated.carbs / updated.servingSize) * 100,
+            protein: (updated.protein / updated.servingSize) * 100,
+            fats: (updated.fats / updated.servingSize) * 100,
+          };
+        }
+        
+        return updated;
+      }),
     );
   };
 
@@ -269,86 +303,115 @@ export default function LogPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <Card className="max-w-xl mx-auto shadow-lg">
-        <div className="ml-4">
-          <Button variant="outline" onClick={() => redirect("/")}>
-            <ChevronLeft className="h-4 w-4" />
+    <div className="min-h-screen bg-background">
+      <div className="bg-gradient-to-b from-primary/5 via-transparent to-transparent pt-6 pb-8">
+        <div className="max-w-xl mx-auto px-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => redirect("/")}
+            className="h-10 w-10 rounded-full hover:bg-primary/10"
+          >
+            <ChevronLeft className="h-5 w-5" />
           </Button>
         </div>
-        <CardHeader className="text-center border-b -mb-4 -mt-4">
-          <CardTitle className="text-2xl font-bold">Log Food</CardTitle>
-          <p className="text-muted-foreground font-medium">
+      </div>
+
+      <div className="max-w-xl mx-auto px-4 -mt-4">
+        <div className="text-center mb-8">
+          <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4">
+            <UtensilsCrossed size={32} />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight">Log Food</h1>
+          <p className="text-muted-foreground font-medium mt-1">
             {formatDate(formData.date)}
           </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <NativeSelect
-              name="meal"
-              value={formData.meal}
-              onChange={handleChange}
-            >
-              <NativeSelectOption value="">Select meal</NativeSelectOption>
-              <NativeSelectOption value="Breakfast">
-                Breakfast
-              </NativeSelectOption>
-              <NativeSelectOption value="lunch">lunch</NativeSelectOption>
-              <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
-              <NativeSelectOption value="Etc">Etc</NativeSelectOption>
-            </NativeSelect>
+        </div>
 
-            <Suggestions
-              favoriteFoods={favorites}
-              recentFoods={recent}
-              show={showSuggestions}
-              onToggle={() => setShowSuggestions(!showSuggestions)}
-              onSelect={addFromSuggestion}
-            />
+        <Card className="border-2 shadow-lg shadow-primary/5 rounded-3xl overflow-hidden">
+          <CardContent className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                  Meal Type
+                </label>
+                <NativeSelect
+                  name="meal"
+                  value={formData.meal}
+                  onChange={handleChange}
+                  className="rounded-xl h-12 text-base font-medium"
+                >
+                  <NativeSelectOption value="">What are you eating?</NativeSelectOption>
+                  <NativeSelectOption value="Breakfast">
+                    Breakfast
+                  </NativeSelectOption>
+                  <NativeSelectOption value="lunch">Lunch</NativeSelectOption>
+                  <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
+                  <NativeSelectOption value="Etc">Snacks / Etc</NativeSelectOption>
+                </NativeSelect>
+              </div>
 
-            {foods.map((food, i) => (
-              <FoodCard
-                key={food.id}
-                food={food}
-                index={i}
-                expanded={expandedFoods.includes(food.id)}
-                canDelete={foods.length > 1}
-                textareaRef={textareaRef}
-                onToggleExpand={toggleExpand}
-                onDelete={removeFood}
-                onServingSizeChange={handleServingChange}
-                onFoodChange={handleFoodChange}
-                onPaste={handlePaste}
+              <Suggestions
+                favoriteFoods={favorites}
+                recentFoods={recent}
+                show={showSuggestions}
+                onToggle={() => setShowSuggestions(!showSuggestions)}
+                onSelect={addFromSuggestion}
               />
-            ))}
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addFood}
-              className="w-full"
-            >
-              <FaPlus className="mr-2 h-3 w-3" /> Add Food
-            </Button>
+              <div className="space-y-4">
+                {foods.map((food, i) => (
+                  <FoodCard
+                    key={food.id}
+                    food={food}
+                    index={i}
+                    expanded={expandedFoods.includes(food.id)}
+                    canDelete={foods.length > 1}
+                    textareaRef={textareaRef}
+                    onToggleExpand={toggleExpand}
+                    onDelete={removeFood}
+                    onServingSizeChange={handleServingChange}
+                    onFoodChange={handleFoodChange}
+                    onPaste={handlePaste}
+                  />
+                ))}
+              </div>
 
-            <div className="flex justify-between text-sm text-muted-foreground pt-2 border-t">
-              <span>Total:</span>
-              <span>
-                {totals.cal.toFixed(0)} kcal | C:{totals.carb.toFixed(0)} P:
-                {totals.pro.toFixed(0)} F:{totals.fat.toFixed(0)}
-              </span>
-            </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addFood}
+                className="w-full h-12 rounded-xl border-dashed border-2 font-semibold"
+              >
+                <FaPlus className="mr-2 h-4 w-4" /> Add Another Food
+              </Button>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-lg font-semibold"
-              disabled={isSubmitting}
-            >
-              <FaPlus className="mr-2" /> Log Food
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="bg-muted/50 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Total Calories</span>
+                  <span className="text-2xl font-black text-primary">
+                    {totals.cal.toFixed(0)}
+                    <span className="text-sm font-medium text-muted-foreground ml-1">kcal</span>
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Carbs: <span className="font-bold text-foreground">{totals.carb.toFixed(0)}g</span></span>
+                  <span>Protein: <span className="font-bold text-foreground">{totals.pro.toFixed(0)}g</span></span>
+                  <span>Fats: <span className="font-bold text-foreground">{totals.fat.toFixed(0)}g</span></span>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20"
+                disabled={isSubmitting}
+              >
+                <FaPlus className="mr-2" /> Log {foods.filter(f => f.foodName && f.calories > 0).length || 0} Food{foods.filter(f => f.foodName && f.calories > 0).length !== 1 ? 's' : ''}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

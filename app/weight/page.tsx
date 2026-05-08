@@ -26,11 +26,14 @@ export default function WeightPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [windowSize, setWindowSize] = useState(14);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchThem = async () => {
+      setLoading(true);
       const data = await getCombinedWeightAndCals();
       setData(data as unknown as WeightEntry[]);
+      setLoading(false);
     };
     fetchThem();
   }, []);
@@ -145,6 +148,14 @@ export default function WeightPage() {
   const pastWeekAvg = getPastWeekAverage();
   const prevWeekAvg = getPrevWeekAverage();
   const weightTrend = pastWeekAvg && prevWeekAvg ? pastWeekAvg - prevWeekAvg : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-2xl mx-auto py-10 px-4">

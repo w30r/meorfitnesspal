@@ -63,28 +63,29 @@ export default function FoodCard({
   return (
     <details
       key={food.id}
-      className="border border-border rounded-lg overflow-hidden"
+      className="border-2 border-border/60 rounded-2xl overflow-hidden bg-card"
       open={expanded}
     >
       <summary
-        className="flex items-center justify-between p-3 cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors list-none"
+        className="flex items-center justify-between p-4 cursor-pointer bg-muted/20 hover:bg-muted/40 transition-all list-none"
         onClick={(e) => {
           e.preventDefault();
           onToggleExpand(food.id);
         }}
       >
-        <div className="flex items-center gap-2">
-          {expanded ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-          <span className="font-medium">
+        <div className="flex items-center gap-3">
+          <div className={`
+            w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold
+            ${food.foodName ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
+          `}>
+            {index + 1}
+          </div>
+          <span className="font-bold">
             {food.foodName || `Food ${index + 1}`}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
             {food.calories.toFixed(0)} kcal
           </span>
           {canDelete && (
@@ -96,55 +97,60 @@ export default function FoodCard({
                 e.stopPropagation();
                 onDelete(food.id);
               }}
-              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl"
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
       </summary>
 
-      <div className="p-3 space-y-3 border-t border-border">
-        <div className="space-y-2">
+      <div className="p-4 space-y-4 border-t border-border/60">
+        <div className="space-y-3">
           <Input
             name="foodName"
-            placeholder="Food name"
+            placeholder="What are you eating?"
             value={food.foodName}
             onChange={(e) => onFoodChange(food.id, e)}
-            className="font-medium"
+            className="font-medium h-11 rounded-xl bg-background capitalize"
           />
-          <div className="flex gap-1">
-            <Button variant="secondary" size="sm" type="button" asChild className="text-xs flex-1">
-              <a href={formatUrl(searchUrl100g, food.foodName)} target="_blank">
-                100g
-              </a>
-            </Button>
-            <Button variant="secondary" size="sm" type="button" asChild className="text-xs flex-1">
-              <a href={formatUrl(searchUrlTypical, food.foodName)} target="_blank">
-                Typical
-              </a>
-            </Button>
-          </div>
+          {food.foodName && (
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" type="button" asChild className="text-xs flex-1 rounded-lg">
+                <a href={formatUrl(searchUrl100g, food.foodName)} target="_blank">
+                  Search 100g
+                </a>
+              </Button>
+              <Button variant="secondary" size="sm" type="button" asChild className="text-xs flex-1 rounded-lg">
+                <a href={formatUrl(searchUrlTypical, food.foodName)} target="_blank">
+                  Search Typical
+                </a>
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
-          <div className="flex flex-wrap gap-1">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+            Serving Size
+          </label>
+          <div className="flex flex-wrap gap-2">
             <Input
               name="servingSize"
               type="number"
-              placeholder="g"
+              placeholder="grams"
               value={food.servingSize || ""}
               onChange={(e) => onServingSizeChange(food.id, Number(e.target.value))}
-              className="w-20 h-8 text-sm"
+              className="w-24 h-10 text-sm rounded-xl font-medium"
             />
             {[50, 100, 150, 200].map((amount) => (
               <Button
                 key={amount}
-                variant="outline"
+                variant={food.servingSize === amount ? "default" : "outline"}
                 size="sm"
                 type="button"
                 onClick={() => handleQuickSize(amount)}
-                className="h-8 text-xs"
+                className="h-10 text-xs font-medium rounded-xl"
               >
                 {amount}g
               </Button>
@@ -152,59 +158,59 @@ export default function FoodCard({
           </div>
         </div>
 
-        <details className="border border-border rounded overflow-hidden">
-          <summary className="flex items-center justify-center p-1 cursor-pointer bg-muted/30 hover:bg-muted/50 text-[10px] text-muted-foreground list-none">
-            <FaPaste className="w-3 h-3 mr-1" /> Data Import
+        <details className="border border-dashed border-border/60 rounded-xl overflow-hidden">
+          <summary className="flex items-center justify-center p-2 cursor-pointer bg-muted/20 hover:bg-muted/40 text-xs text-muted-foreground list-none transition-colors">
+            <FaPaste className="w-3 h-3 mr-2" /> Import from JSON
           </summary>
-          <div className="p-2 border-t border-border space-y-1">
+          <div className="p-3 border-t border-border/60 bg-muted/10">
             <Textarea
               ref={index === 0 ? textareaRef : undefined}
-              placeholder="Paste JSON..."
+              placeholder='Paste JSON like {"calories": 100, "carbs": 20, "protein": 5, "fats": 3}'
               onChange={(e) => onPaste(e.target.value, food.id)}
-              className="bg-background font-mono text-[10px] h-12"
+              className="bg-background font-mono text-xs h-16 rounded-xl"
             />
           </div>
         </details>
 
-        <div className="grid grid-cols-4 gap-2">
-          <div>
-            <Label className="text-[10px]">Calories</Label>
+        <div className="grid grid-cols-4 gap-3">
+          <div className="bg-muted/30 rounded-xl p-2 text-center">
+            <Label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">Cal</Label>
             <Input
               name="calories"
               type="number"
               value={food.calories.toFixed(0) || ""}
               onChange={(e) => onFoodChange(food.id, e)}
-              className="h-8 text-sm"
+              className="h-9 text-center font-bold text-sm rounded-lg bg-background"
             />
           </div>
-          <div>
-            <Label className="text-[10px] text-emerald-600">Carbs</Label>
+          <div className="bg-emerald-500/10 rounded-xl p-2 text-center">
+            <Label className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 block mb-1">Carbs</Label>
             <Input
               name="carbs"
               type="number"
               value={food.carbs.toFixed(0) || ""}
               onChange={(e) => onFoodChange(food.id, e)}
-              className="h-8 text-sm"
+              className="h-9 text-center font-bold text-sm rounded-lg bg-background border-emerald-200 dark:border-emerald-800"
             />
           </div>
-          <div>
-            <Label className="text-[10px] text-rose-600">Protein</Label>
+          <div className="bg-rose-500/10 rounded-xl p-2 text-center">
+            <Label className="text-[9px] font-bold uppercase tracking-wider text-rose-600 block mb-1">Protein</Label>
             <Input
               name="protein"
               type="number"
               value={food.protein.toFixed(0) || ""}
               onChange={(e) => onFoodChange(food.id, e)}
-              className="h-8 text-sm"
+              className="h-9 text-center font-bold text-sm rounded-lg bg-background border-rose-200 dark:border-rose-800"
             />
           </div>
-          <div>
-            <Label className="text-[10px] text-amber-600">Fats</Label>
+          <div className="bg-amber-500/10 rounded-xl p-2 text-center">
+            <Label className="text-[9px] font-bold uppercase tracking-wider text-amber-600 block mb-1">Fats</Label>
             <Input
               name="fats"
               type="number"
               value={food.fats.toFixed(0) || ""}
               onChange={(e) => onFoodChange(food.id, e)}
-              className="h-8 text-sm"
+              className="h-9 text-center font-bold text-sm rounded-lg bg-background border-amber-200 dark:border-amber-800"
             />
           </div>
         </div>

@@ -84,16 +84,23 @@ export default function Home() {
     null,
   );
   const [streak, setStreak] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [dateLoading, setDateLoading] = useState(false);
 
   const isToday = formatDate(today) === formatDate(new Date());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setDateLoading(true);
         const data = await getFoodLogbyDate(formatDate(today));
         setFoodLog(data);
+        setLoading(false);
       } catch {
         console.error("Failed to get food log");
+        setLoading(false);
+      } finally {
+        setDateLoading(false);
       }
     };
     fetchData();
@@ -191,6 +198,14 @@ export default function Home() {
   const caloriePercentage = goal
     ? Math.round(((foodLog?.totalCalories || 0) / goal.calories) * 100)
     : 0;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -381,6 +396,12 @@ export default function Home() {
             />
           )}
         </section>
+
+        {dateLoading && (
+          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
 
         {/* Spacer for bottom nav */}
         <div className="h-20" />

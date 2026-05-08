@@ -48,10 +48,12 @@ export default function Page() {
   const [days, setDays] = useState(30);
   const [calorieGoal, setCalorieGoal] = useState<number>(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const currentLog = foodLogs?.find((l) => l.date === selectedDay);
 
   useEffect(() => {
     const fetchGoal = async () => {
+      setLoading(true);
       const res = await getGoalData();
       console.log("🚀 ~ fetchGoal ~ res:", res);
       setCalorieGoal(res[0]?.calories || (1499 as number));
@@ -106,19 +108,19 @@ export default function Page() {
 
   useEffect(() => {
     const getData = async () => {
+      setLoading(true);
       const response = await getLatestFoodLogs(days);
 
       if (response.success && response.data) {
-        // --- THIS IS WHERE THE MAGIC HAPPENS ---
         const completedData = fillMissingDays(
           response.data as DailyStats[],
           days,
         );
         setFoodLogs(completedData);
-        // ---------------------------------------
       } else {
         setFoodLogs([]);
       }
+      setLoading(false);
     };
     getData();
   }, [days]);
@@ -134,6 +136,15 @@ export default function Page() {
     if (ratio < 0.9) return "bg-primary/60 text-primary-foreground";
     return "bg-primary text-primary-foreground font-black shadow-inner"; // "Goal" state
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-12 p-4 space-y-6 ">
       {/* 1. Period Selector Container */}
