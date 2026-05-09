@@ -339,7 +339,7 @@ export async function getFoodLogbyDate(date: string) {
   }
 }
 
-// delete meal by ID
+// delete meal by ID - preserve favorite if marked
 export async function deleteMealById(mealId: string) {
   try {
     const userId = await getUserId();
@@ -348,9 +348,29 @@ export async function deleteMealById(mealId: string) {
     const db = await connectToDatabase("meorfitnesspal");
     const collection = db.collection("foodlog");
 
+    // First check if this food is marked as favorite
+    const food = await collection.findOne({ _id: new ObjectId(mealId), userId });
+    
+    // If marked as favorite, copy to favoritefoods collection before deleting
+    if (food?.isFavorite) {
+      const favCollection = db.collection("favoritefoods");
+      await favCollection.insertOne({
+        userId,
+        foodName: food.foodName,
+        servingSize: food.servingSize || 0,
+        calories: food.calories || 0,
+        carbs: food.carbs || 0,
+        protein: food.protein || 0,
+        fats: food.fats || 0,
+        per100g: food.per100g,
+        createdAt: new Date(),
+      });
+    }
+
     const result = await collection.deleteOne({ _id: new ObjectId(mealId), userId });
 
     revalidatePath("/foodlogs/[date]", "page");
+    revalidatePath("/favs");
 
     return result.deletedCount;
   } catch (error) {
@@ -617,9 +637,131 @@ export async function toggleFavorite(foodId: string) {
       { $set: { isFavorite: newFavorite } },
     );
 
+    revalidatePath("/foodlogs/[date]");
+    revalidatePath("/favs");
+
     return newFavorite;
   } catch (error) {
     console.error("Failed to toggle favorite", error);
+    throw error;
+  }
+}
+
+// Custom Favorites (separate collection)
+export async function getCustomFavorites() {
+  try {
+    const userId = await getUserId();
+    if (!userId) return [];
+    
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("favoritefoods");
+
+    const favorites = await collection
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return JSON.parse(JSON.stringify(favorites));
+  } catch (error) {
+    console.error("Failed to get custom favorites", error);
+    throw error;
+  }
+}
+
+export async function createFavorite(food: {
+  foodName: string;
+  servingSize: number;
+  calories: number;
+  carbs: number;
+  protein: number;
+  fats: number;
+  per100g?: {
+    calories: number;
+    carbs: number;
+    protein: number;
+    fats: number;
+  };
+}) {
+  try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("favoritefoods");
+
+    const doc = {
+      ...food,
+      userId,
+      createdAt: new Date(),
+    };
+
+    const result = await collection.insertOne(doc);
+    const insertedDocument = await collection.findOne({
+      _id: result.insertedId,
+    });
+
+    revalidatePath("/favs");
+    return JSON.parse(JSON.stringify(insertedDocument));
+  } catch (error) {
+    console.error("Failed to create favorite", error);
+    throw error;
+  }
+}
+
+export async function updateFavorite(
+  foodId: string,
+  food: {
+    foodName: string;
+    servingSize: number;
+    calories: number;
+    carbs: number;
+    protein: number;
+    fats: number;
+    per100g?: {
+      calories: number;
+      carbs: number;
+      protein: number;
+      fats: number;
+    };
+  },
+) {
+  try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("favoritefoods");
+
+    await collection.updateOne(
+      { _id: new ObjectId(foodId), userId },
+      { $set: food },
+    );
+
+    revalidatePath("/favs");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update favorite", error);
+    throw error;
+  }
+}
+
+export async function deleteFavorite(foodId: string) {
+  try {
+    const userId = await getUserId();
+    if (!userId) throw new Error("Not authenticated");
+    
+    const db = await connectToDatabase("meorfitnesspal");
+    const collection = db.collection("favoritefoods");
+
+    const result = await collection.deleteOne({
+      _id: new ObjectId(foodId),
+      userId,
+    });
+
+    revalidatePath("/favs");
+    return result.deletedCount;
+  } catch (error) {
+    console.error("Failed to delete favorite", error);
     throw error;
   }
 }

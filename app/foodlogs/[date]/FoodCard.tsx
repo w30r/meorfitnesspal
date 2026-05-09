@@ -1,6 +1,6 @@
 "use client";
-import { deleteMealById } from "@/app/actions";
-import { Trash } from "lucide-react";
+import { deleteMealById, toggleFavorite } from "@/app/actions";
+import { Trash, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 /**
@@ -14,16 +14,17 @@ export interface FoodLog {
   protein: number;
   carbs: number;
   fats: number;
+  isFavorite?: boolean;
 }
 
 interface FoodCardProps {
   log: FoodLog;
   onDelete?: (id: string) => void;
+  onToggleFavorite?: (id: string) => void;
   date?: string;
 }
 
-const FoodCard = ({ log, onDelete }: FoodCardProps) => {
-  // Calculate calories based on Atwater system: 4 kcal/g for protein/carbs, 9 kcal/g for fats
+const FoodCard = ({ log, onDelete, onToggleFavorite }: FoodCardProps) => {
   const router = useRouter();
   const realCalories = (log.protein * 4 + log.carbs * 4 + log.fats * 9).toFixed(
     1,
@@ -39,8 +40,21 @@ const FoodCard = ({ log, onDelete }: FoodCardProps) => {
     console.log("routed!");
   };
 
+  const handleToggleFavorite = async () => {
+    console.log("Toggle favorite clicked for:", log._id, "current isFavorite:", log.isFavorite);
+    try {
+      await toggleFavorite(log._id!);
+      if (onToggleFavorite) {
+        onToggleFavorite(log._id!);
+      }
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    }
+  };
+
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm transition-all hover:shadow-md">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm transition-all hover:shadow-md">
       {/* Header Section */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
@@ -52,28 +66,43 @@ const FoodCard = ({ log, onDelete }: FoodCardProps) => {
           </p>
         </div>
 
-        <div className="text-right flex flex-col items-end">
-          <div>
-            <span className="text-2xl font-bold text-primary">
-              {log.calories.toFixed(1)}
-            </span>
-            <span className="ml-1 text-xs font-medium uppercase text-muted-foreground">
-              kcal
-            </span>
-          </div>
+<div className="text-right flex flex-col items-end">
+            <div>
+              <span className="text-2xl font-bold text-primary">
+                {log.calories.toFixed(1)}
+              </span>
+              <span className="ml-1 text-xs font-medium uppercase text-muted-foreground">
+                kcal
+              </span>
+            </div>
 
-          {/* Delete Action */}
-          <button
-            onClick={handleDelete}
-            className="mt-2 p-1 transition-colors hover:bg-destructive/10 rounded-md"
-            aria-label="Delete food log"
-          >
-            <Trash
-              className="text-muted-foreground transition-colors group-hover:text-red-600"
-              size={18}
-            />
-          </button>
-        </div>
+            <div className="flex items-center gap-1 mt-2">
+              {/* Favorite Action */}
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className="p-1 rounded-md hover:bg-red-100"
+                aria-label={log.isFavorite ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Heart
+                  className={log.isFavorite ? "fill-pink-500 text-pink-500" : "text-muted-foreground"}
+                  size={18}
+                />
+              </button>
+              {/* Delete Action */}
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="p-1 rounded-md hover:bg-destructive/10"
+                aria-label="Delete food log"
+              >
+                <Trash
+                  className="text-muted-foreground"
+                  size={18}
+                />
+              </button>
+            </div>
+          </div>
       </div>
 
       {/* Macronutrients Grid */}

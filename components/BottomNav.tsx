@@ -11,6 +11,7 @@ import {
   Target,
   BarChart3,
   LogOut,
+  Heart,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -83,6 +84,14 @@ export default function BottomNav() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-card border border-border rounded-2xl p-2 shadow-lg space-y-1">
+              <Link
+                href="/favs"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
+                onClick={() => setShowMoreMenu(false)}
+              >
+                <Heart className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">My Favs</span>
+              </Link>
               <Link
                 href="/goals"
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"

@@ -310,15 +310,17 @@ export default function LogPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [favorites, setFavorites] = useState<SuggestionFood[]>([]);
+  const [customFavs, setCustomFavs] = useState<SuggestionFood[]>([]);
   const [recent, setRecent] = useState<SuggestionFood[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
   useEffect(() => {
-    import("../../actions").then(({ getRecentFoods, getFavoriteFoods }) => {
-      Promise.all([getRecentFoods(15), getFavoriteFoods()])
-        .then(([r, f]) => {
+    import("../../actions").then(({ getRecentFoods, getFavoriteFoods, getCustomFavorites }) => {
+      Promise.all([getRecentFoods(15), getFavoriteFoods(), getCustomFavorites()])
+        .then(([r, f, c]) => {
           setRecent(r || []);
           setFavorites(f || []);
+          setCustomFavs(c || []);
           setSuggestionsLoading(false);
         })
         .catch(console.error);
@@ -339,7 +341,6 @@ export default function LogPage() {
   };
 
   const addFromSuggestion = (food: SuggestionFood) => {
-    const id = Date.now().toString();
     const p100 =
       food.per100g ||
       (food.servingSize > 0
@@ -351,10 +352,14 @@ export default function LogPage() {
           }
         : null);
     const serving = food.servingSize || 100;
-    setFoods((prev) => [
-      ...prev,
-      {
-        id,
+
+    setFoods((prev) => {
+      const emptyIndex = prev.findIndex(
+        (f) => !f.foodName && f.calories === 0 && f.servingSize === 0
+      );
+      const newId = Date.now().toString();
+      const newFood = {
+        id: emptyIndex !== -1 ? prev[emptyIndex].id : newId,
         foodName: capitalizeWords(food.foodName),
         servingSize: serving,
         calories: p100 ? (p100.calories / 100) * serving : food.calories,
@@ -362,9 +367,21 @@ export default function LogPage() {
         protein: p100 ? (p100.protein / 100) * serving : food.protein,
         fats: p100 ? (p100.fats / 100) * serving : food.fats,
         per100g: p100 || undefined,
-      },
-    ]);
-    setExpandedFoods((prev) => [...prev, id]);
+      };
+      if (emptyIndex !== -1) {
+        const updated = [...prev];
+        updated[emptyIndex] = newFood;
+        setExpandedFoods((prevExp) => {
+          if (!prevExp.includes(prev[emptyIndex].id)) {
+            return [...prevExp, prev[emptyIndex].id];
+          }
+          return prevExp;
+        });
+        return updated;
+      }
+      setExpandedFoods((prevExp) => [...prevExp, newId]);
+      return [...prev, newFood];
+    });
   };
 
   const handlePaste = (text: string, foodId: string) => {
@@ -631,8 +648,10 @@ export default function LogPage() {
             </div>
             <Suggestions
               favoriteFoods={favorites}
+              customFoods={customFavs}
               recentFoods={recent}
               show={showSuggestions}
+              loading={suggestionsLoading}
               onToggle={() => setShowSuggestions(!showSuggestions)}
               onSelect={addFromSuggestion}
             />
