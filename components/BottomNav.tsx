@@ -8,10 +8,13 @@ import {
   Home as HomeIcon,
   Utensils,
   Menu,
+  Target,
+  BarChart3,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Target, BarChart3 } from "lucide-react";
+import { signOut } from "@/components/auth-client";
 
 function formatDate(date: Date) {
   const year = date.getFullYear();
@@ -25,6 +28,10 @@ export default function BottomNav() {
   const router = useRouter();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const today = new Date();
+
+  if (pathname === "/signin" || pathname === "/signup") {
+    return null;
+  }
 
   return (
     <>
@@ -100,6 +107,16 @@ export default function BottomNav() {
                 <PlusCircle className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">Log Weight</span>
               </Link>
+              <button
+                onClick={() => {
+                  setShowMoreMenu(false);
+                  signOut().then(() => router.push("/signin"));
+                }}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors w-full text-left text-red-500"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="font-medium">Logout</span>
+              </button>
             </div>
           </div>
         </div>
