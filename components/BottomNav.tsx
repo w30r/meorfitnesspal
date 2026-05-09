@@ -118,10 +118,14 @@ export default function BottomNav() {
               <button
                 onClick={async () => {
                   setShowMoreMenu(false);
+                  alert("1: starting logout");
                   try {
+                    alert("2: calling signOut");
                     await signOut();
+                    alert("3: signOut done");
                     router.push("/signin");
                   } catch (error) {
+                    alert("4: error: " + error);
                     console.error("Logout failed:", error);
                   }
                 }}

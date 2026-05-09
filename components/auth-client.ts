@@ -7,11 +7,18 @@ export const authClient = createAuthClient({
 });
 
 export const signIn = authClient.signIn as typeof authClient.signIn & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   username: (params: { username: string; password: string }) => Promise<any>;
 };
 
 export const signUp = authClient.signUp as typeof authClient.signUp & {
-  email: (params: { email: string; password: string; name: string; username: string }) => Promise<any>;
+  email: (params: {
+    email: string;
+    password: string;
+    name: string;
+    username: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) => Promise<any>;
 };
 
 export const signOut = authClient.signOut;
