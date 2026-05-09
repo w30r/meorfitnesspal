@@ -14,7 +14,6 @@ import {
   Heart,
 } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signOut } from "@/components/auth-client";
 
 function formatDate(date: Date) {
@@ -26,7 +25,6 @@ function formatDate(date: Date) {
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const today = new Date();
 
@@ -117,9 +115,10 @@ export default function BottomNav() {
                 <span className="font-medium">Log Weight</span>
               </Link>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowMoreMenu(false);
-                  signOut().then(() => router.push("/signin"));
+                  await signOut();
+                  window.location.href = "/signin";
                 }}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors w-full text-left text-red-500"
               >
