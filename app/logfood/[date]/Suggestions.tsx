@@ -33,7 +33,7 @@ export default function Suggestions({
 
   return (
     <>
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <Button
           variant="ghost"
           size="sm"

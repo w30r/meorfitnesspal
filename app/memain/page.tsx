@@ -242,7 +242,7 @@ export default function Page() {
 
       {/* 4. Detail View (Drawer-like) */}
       {selectedDay && (
-        <div className="fixed bottom-6 left-4 right-4 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-24 sm:max-w-md left-4 right-4 animate-in fade-in slide-in-from-bottom-4">
           <Card className="p-4 shadow-2xl border-t-4 border-primary bg-card/95 backdrop-blur-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-black text-lg">
