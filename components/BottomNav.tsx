@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   PlusCircle,
   Scale,
@@ -25,6 +25,7 @@ function formatDate(date: Date) {
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const today = new Date();
 
@@ -117,8 +118,12 @@ export default function BottomNav() {
               <button
                 onClick={async () => {
                   setShowMoreMenu(false);
-                  await signOut();
-                  window.location.href = "/signin";
+                  try {
+                    await signOut();
+                    router.push("/signin");
+                  } catch (error) {
+                    console.error("Logout failed:", error);
+                  }
                 }}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors w-full text-left text-red-500"
               >
