@@ -590,7 +590,7 @@ export default function LogPage() {
             <div className="flex gap-2">
               {[
                 { value: "Breakfast", label: "Breakfast" },
-                { value: "lunch", label: "Lunch" },
+                { value: "Lunch", label: "Lunch" },
                 { value: "Dinner", label: "Dinner" },
                 { value: "Etc", label: "Snacks" },
               ].map((meal) => (
