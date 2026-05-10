@@ -23,6 +23,17 @@ export const auth = betterAuth({
   advanced: {
     trustedProxyHeaders: true,
   },
+  cookies: {
+    sessionToken: {
+      name: "better-auth.session_token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax", // Try "lax" or "none" (if using none, secure must be true)
+        secure: true,
+        path: "/",
+      },
+    },
+  },
 });
 
 export type Session = typeof auth.$Infer.Session.session;
