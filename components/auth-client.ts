@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/client";
 
-const baseURL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
+const baseURL = process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
 
 export const authClient = createAuthClient({
   baseURL: `${baseURL}/api/auth`,
@@ -21,4 +21,4 @@ export const signUp = authClient.signUp as typeof authClient.signUp & {
   }) => Promise<any>;
 };
 
-export const signOut = authClient.signOut;
+export const logOut = authClient.signOut;

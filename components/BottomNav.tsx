@@ -14,7 +14,7 @@ import {
   Heart,
 } from "lucide-react";
 import { useState } from "react";
-import { signOut } from "@/components/auth-client";
+import { logOut } from "@/components/auth-client";
 
 function formatDate(date: Date) {
   const year = date.getFullYear();
@@ -121,7 +121,7 @@ export default function BottomNav() {
                   alert("1: starting logout");
                   try {
                     alert("2: calling signOut");
-                    await signOut();
+                    await logOut();
                     alert("3: signOut done");
                     router.push("/signin");
                   } catch (error) {
