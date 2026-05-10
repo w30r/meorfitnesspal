@@ -43,6 +43,7 @@ export default function SignInPage() {
       // Sign in succeeded - redirect to home
       alert(`Sign in successful!`);
       window.location.href = "/";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Sign in error:", err);
       alert("Sign in error: " + err.message);
@@ -108,7 +109,7 @@ export default function SignInPage() {
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <a href="/signup" className="text-primary font-bold hover:underline">
             Sign up
           </a>

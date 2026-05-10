@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export default async function middleware(request: NextRequest) {
-  const sessionCookie = request.cookies.get("better-auth.session_token");
-  
+  let sessionCookie = request.cookies.get("better-auth.session_token");
+  if (!!sessionCookie?.value) {
+    sessionCookie = request.cookies.get("__Secure-better-auth.session_token");
+  }
   const isAuthenticated = !!sessionCookie?.value;
-  const isAuthRoute = request.nextUrl.pathname === "/signin" || 
-                      request.nextUrl.pathname === "/signup";
+  const isAuthRoute =
+    request.nextUrl.pathname === "/signin" ||
+    request.nextUrl.pathname === "/signup";
   const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth");
 
   if (!isAuthenticated && !isAuthRoute && !isAuthApi) {
