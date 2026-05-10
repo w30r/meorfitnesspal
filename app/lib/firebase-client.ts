@@ -2,16 +2,16 @@ import { initializeApp, getApps } from "firebase/app";
 import { getToken, getMessaging, Messaging } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA_h2XGlbTcER8d_AUglbex5PV4c9hAx08",
-  authDomain: "meorfp-notif.firebaseapp.com",
-  projectId: "meorfp-notif",
-  storageBucket: "meorfp-notif.firebasestorage.app",
-  messagingSenderId: "99631836150",
-  appId: "1:99631836150:web:03ad42f5b2ee2fd94475d7",
-  measurementId: "G-Z7Q14H6PQ5"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const vapidKey = "Aq-KogCZ5euf1kZbAZeDS70BLnC2q531MTV_3HRfrVA";
+const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
 let messaging: Messaging | null = null;
 
@@ -44,6 +44,11 @@ export async function requestNotificationPermission(): Promise<boolean> {
 export async function getPushToken(): Promise<string | null> {
   const messaging = getFirebaseMessaging();
   if (!messaging) return null;
+  
+  if (!vapidKey) {
+    console.error("VAPID key not configured");
+    return null;
+  }
   
   try {
     const token = await getToken(messaging, {
