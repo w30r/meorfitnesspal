@@ -45,7 +45,7 @@ export default function SignInPage() {
       window.location.href = "/";
     } catch (err: any) {
       console.error("Sign in error:", err);
-      alert("Sign in error:", err);
+      alert("Sign in error: " + err.message);
       setError(err.message || "Sign in failed");
       setLoading(false);
     }
