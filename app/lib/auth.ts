@@ -20,6 +20,9 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
   },
+  advanced: {
+    trustedProxyHeaders: true,
+  },
 });
 
 export type Session = typeof auth.$Infer.Session.session;
