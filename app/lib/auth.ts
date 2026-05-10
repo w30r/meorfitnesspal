@@ -22,6 +22,7 @@ export const auth = betterAuth({
   },
   advanced: {
     trustedProxyHeaders: true,
+    trustProxy: true,
   },
   cookies: {
     sessionToken: {
