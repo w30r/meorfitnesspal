@@ -27,7 +27,6 @@ export default function SignInPage() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        alert(`Server error: ${response.status}`);
         try {
           const errorData = JSON.parse(errorText);
           setError(
@@ -41,13 +40,12 @@ export default function SignInPage() {
       }
 
       // Sign in succeeded - redirect to home
-      alert(`Sign in successful!`);
       window.location.href = "/";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Sign in error:", err);
-      alert("Sign in error: " + err.message);
-      setError(err.message || "Sign in failed");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setError(message);
       setLoading(false);
     }
   };
