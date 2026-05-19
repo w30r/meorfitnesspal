@@ -624,6 +624,62 @@ export async function toggleFavorite(foodId: string) {
   }
 }
 
+export async function parseFoodWithGemini(mealDescription: string) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+
+  const prompt = `You are a precise nutrition database. Parse the given meal description into a JSON array of food items.
+
+Each item must have exactly these fields:
+- foodName (string): the food name, capitalized
+- servingSize (number): amount in grams (estimate 100g if not specified)
+- calories (number): total calories for that serving size
+- carbs (number): total carbs in grams for that serving size
+- protein (number): total protein in grams for that serving size
+- fats (number): total fats in grams for that serving size
+- per100g (object): nutritional values per 100g with fields: calories, carbs, protein, fats
+
+Use accurate USDA-standard nutritional data. Return ONLY a valid JSON array, no markdown, no code fences, no extra text.
+
+Meal: "${mealDescription}"`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Gemini API error:", errText);
+    throw new Error("AI parsing failed. Check API key or try again.");
+  }
+
+  const data = await res.json();
+  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!raw) throw new Error("AI returned empty response");
+
+  const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) throw new Error("AI response was not an array");
+
+  return parsed.map((item: any, i: number) => ({
+    id: Date.now() + i.toString(),
+    foodName: item.foodName || "Unknown Food",
+    servingSize: item.servingSize || 100,
+    calories: item.calories || 0,
+    carbs: item.carbs || 0,
+    protein: item.protein || 0,
+    fats: item.fats || 0,
+    per100g: item.per100g || undefined,
+  }));
+}
+
 export async function claimExistingData() {
   try {
     const userId = await getUserId();

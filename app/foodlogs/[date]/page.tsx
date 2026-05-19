@@ -106,7 +106,7 @@ export default function FoodLogs() {
           </>
         ) : (
           meals.map((mealType) => {
-            const filteredLogs = data.filter((x: FoodLog) => x.meal === mealType);
+            const filteredLogs = data.filter((x: FoodLog) => x.meal?.toLowerCase() === mealType.toLowerCase());
             const totalCalories = filteredLogs.reduce((sum, log) => sum + (log.calories || 0), 0);
 
             return (

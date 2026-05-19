@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { saveFoodLog } from "../../actions";
+import { saveFoodLog, parseFoodWithGemini } from "../../actions";
 import {
   NativeSelect,
   NativeSelectOption,
@@ -105,6 +105,9 @@ export default function LogPage() {
   const [favorites, setFavorites] = useState<SuggestionFood[]>([]);
   const [recent, setRecent] = useState<SuggestionFood[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   useEffect(() => {
     import("../../actions").then(({ getRecentFoods, getFavoriteFoods }) => {
@@ -129,6 +132,22 @@ export default function LogPage() {
       protein: find("protein"),
       fats: find("fats"),
     };
+  };
+
+  const handleAIParse = async () => {
+    if (!aiInput.trim()) return;
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const result = await parseFoodWithGemini(aiInput);
+      if (result.length === 0) throw new Error("No foods could be parsed from that description");
+      setFoods(result);
+      setExpandedFoods(result.map((f: FoodEntry) => f.id));
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Failed to parse");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const addFromSuggestion = (food: SuggestionFood) => {
@@ -349,6 +368,55 @@ export default function LogPage() {
                   <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
                   <NativeSelectOption value="Etc">Snacks / Etc</NativeSelectOption>
                 </NativeSelect>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
+                  What did you eat?
+                </label>
+                <div className="relative">
+                  <textarea
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    placeholder='e.g. 200g chicken breast, 150g jasmine rice, 1 tbsp olive oil'
+                    className="w-full min-h-[80px] bg-background border-2 border-border/60 rounded-2xl p-4 text-sm font-medium resize-none focus:outline-none focus:border-primary/40 transition-colors"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    onClick={handleAIParse}
+                    disabled={aiLoading || !aiInput.trim()}
+                    className="h-10 px-5 rounded-xl font-semibold text-sm"
+                  >
+                    {aiLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                        Parsing...
+                      </span>
+                    ) : (
+                      "Parse with AI"
+                    )}
+                  </Button>
+                  {aiInput && foods.length > 0 && !aiLoading && (
+                    <span className="text-xs text-muted-foreground">
+                      Results replace current foods
+                    </span>
+                  )}
+                </div>
+                {aiError && (
+                  <p className="text-xs text-destructive font-medium ml-1">{aiError}</p>
+                )}
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/40" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-3 text-muted-foreground font-semibold">or pick from saved</span>
+                </div>
               </div>
 
               <Suggestions
