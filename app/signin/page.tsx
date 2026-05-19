@@ -29,7 +29,9 @@ export default function SignInPage() {
         const errorText = await response.text();
         try {
           const errorData = JSON.parse(errorText);
-          setError(errorData.message || errorData.error?.message || "Sign in failed");
+          setError(
+            errorData.message || errorData.error?.message || "Sign in failed",
+          );
         } catch {
           setError(`Server error: ${response.status}`);
         }
@@ -39,9 +41,11 @@ export default function SignInPage() {
 
       // Sign in succeeded - redirect to home
       window.location.href = "/";
-    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: unknown) {
       console.error("Sign in error:", err);
-      setError(err.message || "Sign in failed");
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setError(message);
       setLoading(false);
     }
   };
@@ -53,18 +57,22 @@ export default function SignInPage() {
           <h1 className="text-3xl font-black tracking-tight text-foreground">
             MeorFP
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Sign in to continue
+          </p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="p-3 bg-destructive/20 text-destructive rounded-lg text-sm">
               {error}
             </div>
           )}
-          
+
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Username</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              Username
+            </label>
             <input
               type="text"
               value={username}
@@ -74,9 +82,11 @@ export default function SignInPage() {
               required
             />
           </div>
-          
+
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Password</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+              Password
+            </label>
             <input
               type="password"
               value={password}
@@ -86,7 +96,7 @@ export default function SignInPage() {
               required
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading}
@@ -95,9 +105,9 @@ export default function SignInPage() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-        
+
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <a href="/signup" className="text-primary font-bold hover:underline">
             Sign up
           </a>

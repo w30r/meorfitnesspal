@@ -2,10 +2,6 @@
 
 import { Input } from "@/components/ui/input";
 import { saveFoodLog, parseFoodWithGemini } from "../../actions";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { FaPlus } from "react-icons/fa6";
 import { redirect, useParams, useRouter } from "next/navigation";
@@ -77,6 +73,217 @@ const capitalizeWords = (str: string): string => {
   return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const foodEmojiMap: Record<string, string> = {
+  // --- Original List (Preserved) ---
+  nasi: "🍚",
+  rice: "🍚",
+  ayam: "🍗",
+  chicken: "🍗",
+  beef: "🥩",
+  rendang: "🥩",
+  ikan: "🐟",
+  dory: "🐟",
+  fish: "🐟",
+  telur: "🥚",
+  egg: "🥚",
+  mee: "🍜",
+  mi: "🍜",
+  bihun: "🍜",
+  laksa: "🍜",
+  kway: "🍜",
+  roti: "🍞",
+  bread: "🍞",
+  tosai: "🍞",
+  toast: "🍞",
+  kopi: "☕",
+  coffee: "☕",
+  latte: "☕",
+  tea: "🍵",
+  goreng: "🍳", // Updated from 🤢 for better appetite!
+  "milk tea": "🧋",
+  keropok: "🥨",
+  kerepek: "🥨",
+  satay: "🍡",
+  burger: "🍔",
+  pizza: "🍕",
+  sundae: "🍦",
+  boba: "🧋",
+
+  // --- 100 New Additions (Malaysian Favorites) ---
+
+  // Rice & Grains
+  "nasi lemak": "🍱",
+  "nasi kerabu": "🦋",
+  "nasi kandar": "🍛",
+  "nasi dagang": "🍛",
+  "nasi himpit": "🧊",
+  "nasi goreng": "🥡",
+  "fried rice": "🥡",
+  bubur: "🥣",
+  porridge: "🥣",
+  ketupat: "🎍",
+  lemang: "🎋",
+  pulut: "🍙",
+  "sticky rice": "🍙",
+
+  // Noodles
+  "char kway teow": "🔥",
+  "curry mee": "🌶️",
+  "curry noodle": "🌶️",
+  "wantan mee": "🥟",
+  "pan mee": "🍜",
+  maggi: "🍜",
+  indomie: "🍜",
+  "lor mee": "🥣",
+  "mee rebus": "🍜",
+  spaghetti: "🍝",
+  pasta: "🍝",
+
+  // Meat & Proteins
+  kambing: "🍖",
+  lamb: "🍖",
+  mutton: "🍖",
+  babi: "🥓",
+  pork: "🥓",
+  duck: "🦆",
+  itik: "🦆",
+  puyuh: "🐦",
+  quail: "🐦",
+  nugget: "🍗",
+  sosej: "🌭",
+  sausage: "🌭",
+  meatball: "🧆",
+  fishball: "🍡",
+
+  // Seafood
+  udang: "🦐",
+  prawn: "🦐",
+  shrimp: "🦐",
+  sotong: "🦑",
+  squid: "🦑",
+  ketam: "🦀",
+  crab: "🦀",
+  kerang: "🐚",
+  cockles: "🐚",
+  clam: "🐚",
+  tuna: "🐟",
+  salmon: "🍣",
+
+  // Breads & Pastries
+  canai: "🫓",
+  naan: "🫓",
+  capati: "🫓",
+  pau: "🥟",
+  bun: "🥯",
+  karipap: "🥟",
+  "curry puff": "🥟",
+  kek: "🍰",
+  cake: "🍰",
+  donut: "🍩",
+  waffle: "🧇",
+  pancake: "🥞",
+  lempeng: "🥞",
+  sandwich: "🥪",
+
+  // Fruits (The Malaysian Staples)
+  durian: "👑",
+  rambutan: "☄️",
+  manggis: "🟣",
+  mangosteen: "🟣",
+  mangga: "🥭",
+  mango: "🥭",
+  pisang: "🍌",
+  banana: "🍌",
+  nanas: "🍍",
+  pineapple: "🍍",
+  tembikai: "🍉",
+  watermelon: "🍉",
+  betik: "🥭",
+  papaya: "🥭",
+  kelapa: "🥥",
+  coconut: "🥥",
+  epal: "🍎",
+  apple: "🍎",
+  limau: "🍋",
+  lime: "🍋",
+
+  // Vegetables & Sides
+  sayur: "🥦",
+  vegetable: "🥦",
+  kentang: "🥔",
+  potato: "🥔",
+  fries: "🍟",
+  salad: "🥗",
+  timun: "🥒",
+  cucumber: "🥒",
+  jagung: "🌽",
+  corn: "🌽",
+  cendawan: "🍄",
+  mushroom: "🍄",
+  petai: "🤢", // This deserves the emoji you used earlier!
+  kacang: "🥜",
+  peanut: "🥜",
+
+  // Desserts & Sweets
+  cendol: "🍧",
+  "ais kacang": "🍧",
+  abc: "🍧",
+  "kuih muih": "🍡",
+  apam: "🧁",
+  puding: "🍮",
+  pudding: "🍮",
+  coklat: "🍫",
+  chocolate: "🍫",
+  biskut: "🍪",
+  biscuit: "🍪",
+  "ice cream": "🍨",
+  aiskrim: "🍨",
+
+  // Drinks
+  "teh tarik": "☕",
+  "teh o": "☕",
+  milo: "🧋",
+  horlicks: "🥛",
+  sirap: "🥤",
+  syrup: "🥤",
+  bandung: "🌸",
+  juice: "🧃",
+  jus: "🧃",
+  soda: "🥤",
+  beer: "🍺",
+  wine: "🍷",
+  air: "💧",
+  water: "💧",
+  susu: "🥛",
+  milk: "🥛",
+  soya: "🥛",
+
+  // Flavors & Miscellaneous
+  sambal: "🌶️",
+  pedas: "🌶️",
+  spicy: "🌶️",
+  keju: "🧀",
+  cheese: "🧀",
+  madu: "🍯",
+  honey: "🍯",
+  soup: "🍲",
+  sup: "🍲",
+  garam: "🧂",
+  salt: "🧂",
+  gula: "🍭",
+  sugar: "🍭",
+};
+
+const addEmoji = (foodName: string): string => {
+  const lower = foodName.toLowerCase();
+  for (const keyword of Object.keys(foodEmojiMap)) {
+    if (lower.includes(keyword)) {
+      return `${foodEmojiMap[keyword]} ${foodName}`;
+    }
+  }
+  return `🍽️ ${foodName}`;
+};
+
 export default function LogPage() {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -103,6 +310,7 @@ export default function LogPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [favorites, setFavorites] = useState<SuggestionFood[]>([]);
+  const [customFavs, setCustomFavs] = useState<SuggestionFood[]>([]);
   const [recent, setRecent] = useState<SuggestionFood[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
   const [aiInput, setAiInput] = useState("");
@@ -110,11 +318,12 @@ export default function LogPage() {
   const [aiError, setAiError] = useState("");
 
   useEffect(() => {
-    import("../../actions").then(({ getRecentFoods, getFavoriteFoods }) => {
-      Promise.all([getRecentFoods(15), getFavoriteFoods()])
-        .then(([r, f]) => {
+    import("../../actions").then(({ getRecentFoods, getFavoriteFoods, getCustomFavorites }) => {
+      Promise.all([getRecentFoods(15), getFavoriteFoods(), getCustomFavorites()])
+        .then(([r, f, c]) => {
           setRecent(r || []);
           setFavorites(f || []);
+          setCustomFavs(c || []);
           setSuggestionsLoading(false);
         })
         .catch(console.error);
@@ -151,7 +360,6 @@ export default function LogPage() {
   };
 
   const addFromSuggestion = (food: SuggestionFood) => {
-    const id = Date.now().toString();
     const p100 =
       food.per100g ||
       (food.servingSize > 0
@@ -163,10 +371,14 @@ export default function LogPage() {
           }
         : null);
     const serving = food.servingSize || 100;
-    setFoods((prev) => [
-      ...prev,
-      {
-        id,
+
+    setFoods((prev) => {
+      const emptyIndex = prev.findIndex(
+        (f) => !f.foodName && f.calories === 0 && f.servingSize === 0
+      );
+      const newId = Date.now().toString();
+      const newFood = {
+        id: emptyIndex !== -1 ? prev[emptyIndex].id : newId,
         foodName: capitalizeWords(food.foodName),
         servingSize: serving,
         calories: p100 ? (p100.calories / 100) * serving : food.calories,
@@ -174,9 +386,21 @@ export default function LogPage() {
         protein: p100 ? (p100.protein / 100) * serving : food.protein,
         fats: p100 ? (p100.fats / 100) * serving : food.fats,
         per100g: p100 || undefined,
-      },
-    ]);
-    setExpandedFoods((prev) => [...prev, id]);
+      };
+      if (emptyIndex !== -1) {
+        const updated = [...prev];
+        updated[emptyIndex] = newFood;
+        setExpandedFoods((prevExp) => {
+          if (!prevExp.includes(prev[emptyIndex].id)) {
+            return [...prevExp, prev[emptyIndex].id];
+          }
+          return prevExp;
+        });
+        return updated;
+      }
+      setExpandedFoods((prevExp) => [...prevExp, newId]);
+      return [...prev, newFood];
+    });
   };
 
   const handlePaste = (text: string, foodId: string) => {
@@ -199,7 +423,7 @@ export default function LogPage() {
     setFoods((prev) =>
       prev.map((f) => {
         if (f.id !== foodId) return f;
-        
+
         let p100 = f.per100g;
         if (!p100 && f.servingSize > 0 && f.calories > 0) {
           p100 = {
@@ -209,9 +433,9 @@ export default function LogPage() {
             fats: (f.fats / f.servingSize) * 100,
           };
         }
-        
+
         if (!p100) return { ...f, servingSize: grams };
-        
+
         return {
           ...f,
           servingSize: grams,
@@ -235,13 +459,19 @@ export default function LogPage() {
     setFoods((prev) =>
       prev.map((f) => {
         if (f.id !== foodId) return f;
-        
+
         const updated = {
           ...f,
           [name]: numFields.includes(name) ? Number(value) : processedValue,
         };
-        
-        if ((name === "calories" || name === "carbs" || name === "protein" || name === "fats") && updated.servingSize > 0) {
+
+        if (
+          (name === "calories" ||
+            name === "carbs" ||
+            name === "protein" ||
+            name === "fats") &&
+          updated.servingSize > 0
+        ) {
           updated.per100g = {
             calories: (updated.calories / updated.servingSize) * 100,
             carbs: (updated.carbs / updated.servingSize) * 100,
@@ -249,7 +479,7 @@ export default function LogPage() {
             fats: (updated.fats / updated.servingSize) * 100,
           };
         }
-        
+
         return updated;
       }),
     );
@@ -300,6 +530,7 @@ export default function LogPage() {
       for (const food of valid) {
         await saveFoodLog({
           ...food,
+          foodName: addEmoji(food.foodName),
           date: formData.date,
           meal: formData.meal,
         });
@@ -336,98 +567,164 @@ export default function LogPage() {
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto px-4 -mt-4">
-        <div className="text-center mb-8">
+      <div className="max-w-xl mx-auto px-4 -mt-4 space-y-4">
+        <div className="text-center mb-6">
           <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4">
             <UtensilsCrossed size={32} />
           </div>
           <h1 className="text-3xl font-black tracking-tight">Log Food</h1>
-          <p className="text-muted-foreground font-medium mt-1">
-            {formatDate(formData.date)}
-          </p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={() => {
+                const d = new Date(formData.date);
+                d.setDate(d.getDate() - 1);
+                setFormData((prev) => ({
+                  ...prev,
+                  date: d.toLocaleDateString("en-CA"),
+                }));
+              }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Input
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, date: e.target.value }))
+              }
+              className="w-36 h-9 text-center font-medium text-foreground bg-background border-2 border-dashed border-muted-foreground/30 rounded-xl"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={() => {
+                const d = new Date(formData.date);
+                d.setDate(d.getDate() + 1);
+                setFormData((prev) => ({
+                  ...prev,
+                  date: d.toLocaleDateString("en-CA"),
+                }));
+              }}
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+            </Button>
+          </div>
         </div>
 
-        <Card className="border-2 shadow-lg shadow-primary/5 rounded-3xl overflow-hidden">
-          <CardContent className="p-6 space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-3">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
-                  Meal Type
-                </label>
-                <NativeSelect
-                  name="meal"
-                  value={formData.meal}
-                  onChange={handleChange}
-                  className="rounded-xl h-12 text-base font-medium"
+        <Card className="border-2 border-chart-5/40 shadow-lg shadow-chart-5/10 rounded-2xl overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-6 bg-chart-5 rounded-full" />
+              <label className="text-sm font-bold uppercase tracking-wider text-chart-5">
+                Meal
+              </label>
+            </div>
+            <div className="flex gap-2">
+              {[
+                { value: "Breakfast", label: "Breakfast" },
+                { value: "Lunch", label: "Lunch" },
+                { value: "Dinner", label: "Dinner" },
+                { value: "Etc", label: "Snacks" },
+              ].map((meal) => (
+                <Button
+                  key={meal.value}
+                  type="button"
+                  variant={formData.meal === meal.value ? "default" : "outline"}
+                  className="flex-1 rounded-xl font-medium"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, meal: meal.value }))
+                  }
                 >
-                  <NativeSelectOption value="">What are you eating?</NativeSelectOption>
-                  <NativeSelectOption value="Breakfast">
-                    Breakfast
-                  </NativeSelectOption>
-                  <NativeSelectOption value="lunch">Lunch</NativeSelectOption>
-                  <NativeSelectOption value="Dinner">Dinner</NativeSelectOption>
-                  <NativeSelectOption value="Etc">Snacks / Etc</NativeSelectOption>
-                </NativeSelect>
-              </div>
+                  {meal.label}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="space-y-3">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">
-                  What did you eat?
-                </label>
-                <div className="relative">
-                  <textarea
-                    value={aiInput}
-                    onChange={(e) => setAiInput(e.target.value)}
-                    placeholder='e.g. 200g chicken breast, 150g jasmine rice, 1 tbsp olive oil'
-                    className="w-full min-h-[80px] bg-background border-2 border-border/60 rounded-2xl p-4 text-sm font-medium resize-none focus:outline-none focus:border-primary/40 transition-colors"
-                    rows={3}
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    onClick={handleAIParse}
-                    disabled={aiLoading || !aiInput.trim()}
-                    className="h-10 px-5 rounded-xl font-semibold text-sm"
-                  >
-                    {aiLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                        Parsing...
-                      </span>
-                    ) : (
-                      "Parse with AI"
-                    )}
-                  </Button>
-                  {aiInput && foods.length > 0 && !aiLoading && (
-                    <span className="text-xs text-muted-foreground">
-                      Results replace current foods
-                    </span>
-                  )}
-                </div>
-                {aiError && (
-                  <p className="text-xs text-destructive font-medium ml-1">{aiError}</p>
+        <Card className="border-2 border-chart-1/20 shadow-lg shadow-chart-1/10 rounded-2xl overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-6 bg-chart-1 rounded-full" />
+              <span className="text-sm font-bold uppercase tracking-wider text-chart-1">
+                AI Parsing
+              </span>
+            </div>
+            <textarea
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              placeholder='e.g. 200g chicken breast, 150g jasmine rice, 1 tbsp olive oil'
+              className="w-full min-h-[80px] bg-background border-2 border-border/60 rounded-xl p-3 text-sm font-medium resize-none focus:outline-none focus:border-chart-1/40 transition-colors"
+              rows={3}
+            />
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                onClick={handleAIParse}
+                disabled={aiLoading || !aiInput.trim()}
+                className="h-9 px-4 rounded-xl font-semibold text-xs"
+              >
+                {aiLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                    Parsing...
+                  </span>
+                ) : (
+                  "Parse with AI"
                 )}
+              </Button>
+              {aiError && (
+                <span className="text-xs text-destructive font-medium">{aiError}</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-chart-2/20 shadow-lg shadow-chart-2/10 rounded-2xl overflow-hidden">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-chart-2 rounded-full" />
+                <span className="text-sm font-bold uppercase tracking-wider text-chart-2">
+                  Quick Add
+                </span>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs"
+                type="button"
+                onClick={() => setShowSuggestions(!showSuggestions)}
+              >
+                {showSuggestions ? "Hide" : "Show"}
+              </Button>
+            </div>
+            <Suggestions
+              favoriteFoods={favorites}
+              customFoods={customFavs}
+              recentFoods={recent}
+              show={showSuggestions}
+              loading={suggestionsLoading}
+              onToggle={() => setShowSuggestions(!showSuggestions)}
+              onSelect={addFromSuggestion}
+            />
+          </CardContent>
+        </Card>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border/40" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-3 text-muted-foreground font-semibold">or pick from saved</span>
-                </div>
-              </div>
-
-              <Suggestions
-                favoriteFoods={favorites}
-                recentFoods={recent}
-                show={showSuggestions}
-                onToggle={() => setShowSuggestions(!showSuggestions)}
-                onSelect={addFromSuggestion}
-              />
-
-              <div className="space-y-4">
+        <Card className="border-2 border-chart-3/20 shadow-lg shadow-chart-3/10 rounded-2xl overflow-hidden">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-6 bg-chart-3 rounded-full" />
+              <span className="text-sm font-bold uppercase tracking-wider text-chart-3">
+                Foods
+              </span>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-3">
                 {foods.map((food, i) => (
                   <FoodCard
                     key={food.id}
@@ -454,18 +751,37 @@ export default function LogPage() {
                 <FaPlus className="mr-2 h-4 w-4" /> Add Another Food
               </Button>
 
-              <div className="bg-muted/50 rounded-2xl p-4 space-y-3">
+              <div className="bg-chart-3/10 rounded-xl p-4 space-y-3 border border-chart-3/20">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Total Calories</span>
-                  <span className="text-2xl font-black text-primary">
+                  <span className="text-sm font-medium text-chart-3/80">
+                    Total
+                  </span>
+                  <span className="text-2xl font-black text-chart-3">
                     {totals.cal.toFixed(0)}
-                    <span className="text-sm font-medium text-muted-foreground ml-1">kcal</span>
+                    <span className="text-sm font-medium text-chart-3/70 ml-1">
+                      kcal
+                    </span>
                   </span>
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Carbs: <span className="font-bold text-foreground">{totals.carb.toFixed(0)}g</span></span>
-                  <span>Protein: <span className="font-bold text-foreground">{totals.pro.toFixed(0)}g</span></span>
-                  <span>Fats: <span className="font-bold text-foreground">{totals.fat.toFixed(0)}g</span></span>
+                <div className="flex justify-between text-xs font-medium">
+                  <span className="text-chart-3/70">
+                    Carbs:{" "}
+                    <span className="text-chart-3">
+                      {totals.carb.toFixed(0)}g
+                    </span>
+                  </span>
+                  <span className="text-chart-3/70">
+                    Protein:{" "}
+                    <span className="text-chart-3">
+                      {totals.pro.toFixed(0)}g
+                    </span>
+                  </span>
+                  <span className="text-chart-3/70">
+                    Fats:{" "}
+                    <span className="text-chart-3">
+                      {totals.fat.toFixed(0)}g
+                    </span>
+                  </span>
                 </div>
               </div>
 
@@ -474,7 +790,12 @@ export default function LogPage() {
                 className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20"
                 disabled={isSubmitting}
               >
-                <FaPlus className="mr-2" /> Log {foods.filter(f => f.foodName && f.calories > 0).length || 0} Food{foods.filter(f => f.foodName && f.calories > 0).length !== 1 ? 's' : ''}
+                <FaPlus className="mr-2" /> Log{" "}
+                {foods.filter((f) => f.foodName && f.calories > 0).length || 0}{" "}
+                Food
+                {foods.filter((f) => f.foodName && f.calories > 0).length !== 1
+                  ? "s"
+                  : ""}
               </Button>
             </form>
           </CardContent>

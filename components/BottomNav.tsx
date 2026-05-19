@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   PlusCircle,
   Scale,
   Home as HomeIcon,
   Utensils,
   Menu,
+  Target,
+  BarChart3,
+  LogOut,
+  Heart,
 } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Target, BarChart3 } from "lucide-react";
+import { logOut } from "@/components/auth-client";
 
 function formatDate(date: Date) {
   const year = date.getFullYear();
@@ -25,6 +28,10 @@ export default function BottomNav() {
   const router = useRouter();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const today = new Date();
+
+  if (pathname === "/signin" || pathname === "/signup") {
+    return null;
+  }
 
   return (
     <>
@@ -77,6 +84,14 @@ export default function BottomNav() {
           >
             <div className="bg-card border border-border rounded-2xl p-2 shadow-lg space-y-1">
               <Link
+                href="/favs"
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
+                onClick={() => setShowMoreMenu(false)}
+              >
+                <Heart className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">My Favs</span>
+              </Link>
+              <Link
                 href="/goals"
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
                 onClick={() => setShowMoreMenu(false)}
@@ -100,6 +115,22 @@ export default function BottomNav() {
                 <PlusCircle className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">Log Weight</span>
               </Link>
+              <button
+                onClick={async () => {
+                  setShowMoreMenu(false);
+                  try {
+                    await logOut();
+                    router.push("/signin");
+                  } catch (error) {
+                    alert("Failed to log out. Please try again.");
+                    console.error("Logout failed:", error);
+                  }
+                }}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors w-full text-left text-red-500"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="font-medium">Logout</span>
+              </button>
             </div>
           </div>
         </div>

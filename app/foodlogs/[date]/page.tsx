@@ -18,6 +18,7 @@ interface FoodLog {
   fats: number;
   date: string;
   meal: string;
+  isFavorite?: boolean;
 }
 
 export function formatShortDate(dateStr: string) {
@@ -62,6 +63,14 @@ export default function FoodLogs() {
 
   const handleDeleteLog = (id: string) => {
     setData((prev) => prev.filter((log) => log._id !== id));
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    setData((prev) =>
+      prev.map((log) =>
+        log._id === id ? { ...log, isFavorite: !log.isFavorite } : log
+      )
+    );
   };
 
   return (
@@ -135,6 +144,7 @@ export default function FoodLogs() {
                         key={log._id}
                         log={log}
                         onDelete={handleDeleteLog}
+                        onToggleFavorite={handleToggleFavorite}
                       />
                     ))
                   ) : (

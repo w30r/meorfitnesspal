@@ -16,10 +16,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "MeorFP",
-  description: "meorFitnessPal",
+  description: "Meor Fitness Pal",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "MeorFP",
   },
   icons: {
