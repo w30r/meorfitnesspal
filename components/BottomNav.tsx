@@ -100,12 +100,12 @@ export default function BottomNav() {
                 <span className="font-medium">Goals</span>
               </Link>
               <Link
-                href="/memain"
+                href="/insights"
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors"
                 onClick={() => setShowMoreMenu(false)}
               >
                 <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                <span className="font-medium">Stats</span>
+                <span className="font-medium">Insights</span>
               </Link>
               <Link
                 href="/logweight"
