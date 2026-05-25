@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import { FaHeart } from "react-icons/fa6";
 
 interface Suggestion {
@@ -40,11 +41,13 @@ export default function Suggestions({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-[10px]"
+            className="h-6 px-1"
             type="button"
             onClick={onToggle}
           >
-            Hide
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${show ? "" : "-rotate-90"}`}
+            />
           </Button>
         </div>
         {show && (
@@ -64,11 +67,13 @@ export default function Suggestions({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 text-[10px]"
+          className="h-6 px-1"
           type="button"
           onClick={onToggle}
         >
-          {show ? "Hide" : "Show"} suggestions
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${show ? "" : "-rotate-90"}`}
+          />
         </Button>
       </div>
       {show && (

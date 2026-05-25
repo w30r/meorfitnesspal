@@ -6,8 +6,13 @@ import { Button } from "@/components/ui/button";
 import { FaPlus } from "react-icons/fa6";
 import { redirect, useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, UtensilsCrossed } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  UtensilsCrossed,
+} from "lucide-react";
 import FoodCard from "./FoodCard";
 import Suggestions from "./Suggestions";
 
@@ -308,7 +313,8 @@ export default function LogPage() {
   ]);
   const [expandedFoods, setExpandedFoods] = useState<string[]>(["1"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [step, setStep] = useState(1);
   const [favorites, setFavorites] = useState<SuggestionFood[]>([]);
   const [customFavs, setCustomFavs] = useState<SuggestionFood[]>([]);
   const [recent, setRecent] = useState<SuggestionFood[]>([]);
@@ -316,18 +322,25 @@ export default function LogPage() {
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const [aiDone, setAiDone] = useState(false);
 
   useEffect(() => {
-    import("../../actions").then(({ getRecentFoods, getFavoriteFoods, getCustomFavorites }) => {
-      Promise.all([getRecentFoods(15), getFavoriteFoods(), getCustomFavorites()])
-        .then(([r, f, c]) => {
-          setRecent(r || []);
-          setFavorites(f || []);
-          setCustomFavs(c || []);
-          setSuggestionsLoading(false);
-        })
-        .catch(console.error);
-    });
+    import("../../actions").then(
+      ({ getRecentFoods, getFavoriteFoods, getCustomFavorites }) => {
+        Promise.all([
+          getRecentFoods(15),
+          getFavoriteFoods(),
+          getCustomFavorites(),
+        ])
+          .then(([r, f, c]) => {
+            setRecent(r || []);
+            setFavorites(f || []);
+            setCustomFavs(c || []);
+            setSuggestionsLoading(false);
+          })
+          .catch(console.error);
+      },
+    );
   }, []);
 
   const parsePaste = (text: string) => {
@@ -349,9 +362,12 @@ export default function LogPage() {
     setAiError("");
     try {
       const result = await parseFoodWithGemini(aiInput);
-      if (result.length === 0) throw new Error("No foods could be parsed from that description");
+      if (result.length === 0)
+        throw new Error("No foods could be parsed from that description");
       setFoods(result);
       setExpandedFoods(result.map((f: FoodEntry) => f.id));
+      setAiDone(true);
+      setTimeout(() => setAiDone(false), 2500);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : "Failed to parse");
     } finally {
@@ -374,7 +390,7 @@ export default function LogPage() {
 
     setFoods((prev) => {
       const emptyIndex = prev.findIndex(
-        (f) => !f.foodName && f.calories === 0 && f.servingSize === 0
+        (f) => !f.foodName && f.calories === 0 && f.servingSize === 0,
       );
       const newId = Date.now().toString();
       const newFood = {
@@ -552,6 +568,12 @@ export default function LogPage() {
     { cal: 0, carb: 0, pro: 0, fat: 0 },
   );
 
+  const steps = [
+    { num: 1, label: "Meal" },
+    { num: 2, label: "Food" },
+    { num: 3, label: "Review" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-to-b from-primary/5 via-transparent to-transparent pt-6 pb-8">
@@ -559,7 +581,7 @@ export default function LogPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => redirect("/")}
+            onClick={() => (step === 1 ? redirect("/") : setStep(step - 1))}
             className="h-10 w-10 rounded-full hover:bg-primary/10"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -568,7 +590,7 @@ export default function LogPage() {
       </div>
 
       <div className="max-w-xl mx-auto px-4 -mt-4 space-y-4">
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4">
             <UtensilsCrossed size={32} />
           </div>
@@ -615,191 +637,327 @@ export default function LogPage() {
           </div>
         </div>
 
-        <Card className="border-2 border-chart-5/40 shadow-lg shadow-chart-5/10 rounded-2xl overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-1.5 h-6 bg-chart-5 rounded-full" />
-              <label className="text-sm font-bold uppercase tracking-wider text-chart-5">
-                Meal
-              </label>
-            </div>
-            <div className="flex gap-2">
-              {[
-                { value: "Breakfast", label: "Breakfast" },
-                { value: "Lunch", label: "Lunch" },
-                { value: "Dinner", label: "Dinner" },
-                { value: "Etc", label: "Snacks" },
-              ].map((meal) => (
-                <Button
-                  key={meal.value}
-                  type="button"
-                  variant={formData.meal === meal.value ? "default" : "outline"}
-                  className="flex-1 rounded-xl font-medium"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, meal: meal.value }))
-                  }
-                >
-                  {meal.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-chart-1/20 shadow-lg shadow-chart-1/10 rounded-2xl overflow-hidden">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-6 bg-chart-1 rounded-full" />
-              <span className="text-sm font-bold uppercase tracking-wider text-chart-1">
-                AI Parsing
-              </span>
-            </div>
-            <textarea
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              placeholder='e.g. 200g chicken breast, 150g jasmine rice, 1 tbsp olive oil'
-              className="w-full min-h-[80px] bg-background border-2 border-border/60 rounded-xl p-3 text-sm font-medium resize-none focus:outline-none focus:border-chart-1/40 transition-colors"
-              rows={3}
-            />
-            <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                onClick={handleAIParse}
-                disabled={aiLoading || !aiInput.trim()}
-                className="h-9 px-4 rounded-xl font-semibold text-xs"
+        {/* Progress Steps */}
+        <div className="flex items-center justify-center gap-0 mb-2">
+          {steps.map((s, i) => (
+            <button
+              key={s.num}
+              onClick={() => setStep(s.num)}
+              className="flex items-center cursor-pointer"
+            >
+              <div
+                className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-colors ${
+                  step === s.num
+                    ? "bg-primary text-primary-foreground"
+                    : step > s.num
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                }`}
               >
-                {aiLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                    Parsing...
-                  </span>
-                ) : (
-                  "Parse with AI"
-                )}
-              </Button>
-              {aiError && (
-                <span className="text-xs text-destructive font-medium">{aiError}</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-chart-2/20 shadow-lg shadow-chart-2/10 rounded-2xl overflow-hidden">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-6 bg-chart-2 rounded-full" />
-                <span className="text-sm font-bold uppercase tracking-wider text-chart-2">
-                  Quick Add
-                </span>
+                {step > s.num ? <Check className="h-4 w-4" /> : s.num}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-xs"
-                type="button"
-                onClick={() => setShowSuggestions(!showSuggestions)}
+              <span
+                className={`text-xs font-medium ml-1.5 mr-3 ${
+                  step === s.num ? "text-foreground" : "text-muted-foreground"
+                }`}
               >
-                {showSuggestions ? "Hide" : "Show"}
-              </Button>
-            </div>
-            <Suggestions
-              favoriteFoods={favorites}
-              customFoods={customFavs}
-              recentFoods={recent}
-              show={showSuggestions}
-              loading={suggestionsLoading}
-              onToggle={() => setShowSuggestions(!showSuggestions)}
-              onSelect={addFromSuggestion}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-chart-3/20 shadow-lg shadow-chart-3/10 rounded-2xl overflow-hidden">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-6 bg-chart-3 rounded-full" />
-              <span className="text-sm font-bold uppercase tracking-wider text-chart-3">
-                Foods
+                {s.label}
               </span>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-3">
-                {foods.map((food, i) => (
-                  <FoodCard
-                    key={food.id}
-                    food={food}
-                    index={i}
-                    expanded={expandedFoods.includes(food.id)}
-                    canDelete={foods.length > 1}
-                    textareaRef={textareaRef}
-                    onToggleExpand={toggleExpand}
-                    onDelete={removeFood}
-                    onServingSizeChange={handleServingChange}
-                    onFoodChange={handleFoodChange}
-                    onPaste={handlePaste}
-                  />
+              {i < steps.length - 1 && (
+                <div
+                  className={`w-8 h-0.5 mr-3 rounded-full ${
+                    step > s.num ? "bg-primary/40" : "bg-muted"
+                  }`}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Step 1: Meal Selection */}
+        {step === 1 && (
+          <Card className="border-2 border-border/60 shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <p className="text-sm text-muted-foreground mb-4 text-center">
+                Which meal are you logging for?
+              </p>
+              <div className="flex gap-3">
+                {[
+                  { value: "Breakfast", label: "Breakfast", icon: "🌅" },
+                  { value: "Lunch", label: "Lunch", icon: "☀️" },
+                  { value: "Dinner", label: "Dinner", icon: "🌙" },
+                  { value: "Etc", label: "Snacks", icon: "🍿" },
+                ].map((meal) => (
+                  <Button
+                    key={meal.value}
+                    type="button"
+                    variant={
+                      formData.meal === meal.value ? "default" : "outline"
+                    }
+                    className={`flex-1 rounded-xl font-medium h-20 flex-col gap-1 ${
+                      formData.meal === meal.value ? "ring-2 ring-primary" : ""
+                    }`}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, meal: meal.value }))
+                    }
+                  >
+                    <span className="text-lg">{meal.icon}</span>
+                    {meal.label}
+                  </Button>
                 ))}
               </div>
-
               <Button
-                type="button"
-                variant="outline"
-                onClick={addFood}
-                className="w-full h-12 rounded-xl border-dashed border-2 font-semibold"
+                className="w-full mt-6 h-12 rounded-xl font-bold"
+                disabled={!formData.meal}
+                onClick={() => setStep(2)}
               >
-                <FaPlus className="mr-2 h-4 w-4" /> Add Another Food
+                Next <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="bg-chart-3/10 rounded-xl p-4 space-y-3 border border-chart-3/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-chart-3/80">
-                    Total
-                  </span>
-                  <span className="text-2xl font-black text-chart-3">
-                    {totals.cal.toFixed(0)}
-                    <span className="text-sm font-medium text-chart-3/70 ml-1">
-                      kcal
-                    </span>
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs font-medium">
-                  <span className="text-chart-3/70">
-                    Carbs:{" "}
-                    <span className="text-chart-3">
-                      {totals.carb.toFixed(0)}g
-                    </span>
-                  </span>
-                  <span className="text-chart-3/70">
-                    Protein:{" "}
-                    <span className="text-chart-3">
-                      {totals.pro.toFixed(0)}g
-                    </span>
-                  </span>
-                  <span className="text-chart-3/70">
-                    Fats:{" "}
-                    <span className="text-chart-3">
-                      {totals.fat.toFixed(0)}g
-                    </span>
-                  </span>
-                </div>
+        {/* Step 2: Add Food */}
+        {step === 2 && (
+          <div className="md:relative md:left-1/2 md:-translate-x-1/2 md:w-[calc(100vw-2rem)] md:max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Left Column: AI Parsing + Foods */}
+              <div className="space-y-4">
+                {/* AI Parsing */}
+                <Card className="border-2 border-border/60 shadow-sm rounded-2xl overflow-hidden">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        AI Parsing
+                      </span>
+                    </div>
+                    <textarea
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      placeholder="e.g. 200g chicken breast, 150g jasmine rice, 1 tbsp olive oil"
+                      className="w-full min-h-[80px] bg-background border-2 border-border/60 rounded-xl p-3 text-sm font-medium resize-none focus:outline-none focus:border-primary/40 transition-colors"
+                      rows={3}
+                    />
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        onClick={handleAIParse}
+                        disabled={aiLoading || !aiInput.trim()}
+                        className="h-9 px-4 rounded-xl font-semibold text-xs"
+                      >
+                        {aiLoading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="w-3.5 h-3.5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                            Parsing...
+                          </span>
+                        ) : aiDone ? (
+                          <span className="flex items-center gap-2">
+                            <Check className="h-4 w-4" /> Done
+                          </span>
+                        ) : (
+                          "Parse with AI"
+                        )}
+                      </Button>
+                      {aiError && (
+                        <span className="text-xs text-destructive font-medium">
+                          {aiError}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {aiDone && (
+                  <div className="relative flex justify-center pointer-events-none -my-2">
+                    {[...Array(12)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute h-2.5 w-2.5 rounded-full"
+                        style={
+                          {
+                            backgroundColor: `hsl(${i * 30}, 80%, 60%)`,
+                            animation: `particle-burst 0.8s ease-out forwards`,
+                            animationDelay: `${i * 0.04}s`,
+                            "--rotation": `${i * 30}deg`,
+                            opacity: 0,
+                          } as React.CSSProperties
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Manual Foods */}
+                <Card className="border-2 border-border/60 shadow-sm rounded-2xl overflow-hidden">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Foods
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {foods.map((food, i) => (
+                        <FoodCard
+                          key={food.id}
+                          food={food}
+                          index={i}
+                          expanded={expandedFoods.includes(food.id)}
+                          canDelete={foods.length > 1}
+                          textareaRef={textareaRef}
+                          onToggleExpand={toggleExpand}
+                          onDelete={removeFood}
+                          onServingSizeChange={handleServingChange}
+                          onFoodChange={handleFoodChange}
+                          onPaste={handlePaste}
+                        />
+                      ))}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addFood}
+                      className="w-full h-12 rounded-xl border-dashed border-2 font-semibold"
+                    >
+                      <FaPlus className="mr-2 h-4 w-4" /> Add Another Food
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20"
-                disabled={isSubmitting}
-              >
-                <FaPlus className="mr-2" /> Log{" "}
-                {foods.filter((f) => f.foodName && f.calories > 0).length || 0}{" "}
-                Food
-                {foods.filter((f) => f.foodName && f.calories > 0).length !== 1
-                  ? "s"
-                  : ""}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              {/* Right Column: Quick Add + Next */}
+              <div className="space-y-4 max-w-lg">
+                {/* Quick Add */}
+                <Card className="border-2 border-border/60 shadow-sm rounded-2xl overflow-hidden">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                        Quick Add
+                      </span>
+                    </div>
+                    <Suggestions
+                      favoriteFoods={favorites}
+                      customFoods={customFavs}
+                      recentFoods={recent}
+                      show={showSuggestions}
+                      loading={suggestionsLoading}
+                      onToggle={() => setShowSuggestions(!showSuggestions)}
+                      onSelect={addFromSuggestion}
+                    />
+                  </CardContent>
+                </Card>
+
+                <Button
+                  className="w-full h-14 rounded-2xl font-bold text-lg shadow-lg shadow-primary/20"
+                  onClick={() => setStep(3)}
+                >
+                  Next <ChevronRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Review & Submit */}
+        {step === 3 && (
+          <Card className="border-2 border-border/60 shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-6 space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  {formData.meal} &middot; {formatDate(formData.date)}
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  {foods.filter((f) => f.foodName && f.calories > 0).length >
+                  0 ? (
+                    foods
+                      .filter((f) => f.foodName && f.calories > 0)
+                      .map((food) => (
+                        <div
+                          key={food.id}
+                          className="flex items-center justify-between bg-muted/30 rounded-xl p-3"
+                        >
+                          <div>
+                            <p className="font-medium text-sm">
+                              {food.foodName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {food.servingSize}g
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-sm">
+                              {food.calories.toFixed(0)} kcal
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              C: {food.carbs.toFixed(0)}g &middot; P:{" "}
+                              {food.protein.toFixed(0)}g &middot; F:{" "}
+                              {food.fats.toFixed(0)}g
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No foods added yet. Go back and add some food.
+                    </p>
+                  )}
+                </div>
+
+                <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Total
+                    </span>
+                    <span className="text-2xl font-black text-foreground">
+                      {totals.cal.toFixed(0)}
+                      <span className="text-sm font-medium text-muted-foreground ml-1">
+                        kcal
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="text-muted-foreground">
+                      Carbs:{" "}
+                      <span className="text-foreground">
+                        {totals.carb.toFixed(0)}g
+                      </span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      Protein:{" "}
+                      <span className="text-foreground">
+                        {totals.pro.toFixed(0)}g
+                      </span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      Fats:{" "}
+                      <span className="text-foreground">
+                        {totals.fat.toFixed(0)}g
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20"
+                  disabled={isSubmitting}
+                >
+                  <FaPlus className="mr-2" /> Log{" "}
+                  {foods.filter((f) => f.foodName && f.calories > 0).length ||
+                    0}{" "}
+                  Food
+                  {foods.filter((f) => f.foodName && f.calories > 0).length !==
+                  1
+                    ? "s"
+                    : ""}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
