@@ -47,11 +47,10 @@ export default function BottomNav() {
 
           <Link
             href={`/logfood/${formatDate(today)}`}
-            className="flex flex-col items-center gap-1 -mt-8"
+            className={`flex flex-col items-center gap-1 transition-colors ${pathname.startsWith("/logfood") ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
           >
-            <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <Utensils className="h-8 w-8 text-primary-foreground" />
-            </div>
+            <Utensils className="h-6 w-6" />
+            <span className="text-[10px] font-medium">Log</span>
           </Link>
 
           <Link

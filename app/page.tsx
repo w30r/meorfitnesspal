@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -86,6 +86,15 @@ export default function Home() {
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [dateLoading, setDateLoading] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    if (newDate) {
+      const [year, month, day] = newDate.split("-").map(Number);
+      setToday(new Date(year, month - 1, day));
+    }
+  };
 
   const isToday = formatDate(today) === formatDate(new Date());
 
@@ -221,7 +230,10 @@ export default function Home() {
             <ChevronLeft className="h-5 w-5" />
           </Button>
 
-          <div className="flex flex-col items-center">
+          <div
+            onClick={() => dateInputRef.current?.showPicker()}
+            className="flex flex-col items-center cursor-pointer"
+          >
             <div className="flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 text-primary" />
               <h1 className="text-sm font-bold uppercase tracking-wider">
@@ -231,7 +243,10 @@ export default function Home() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleGoToToday}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGoToToday();
+                  }}
                   className="text-[10px] h-6 px-2 font-medium"
                 >
                   Today
@@ -243,6 +258,13 @@ export default function Home() {
                 {formatShortDate(formatDate(today))}
               </span>
             )}
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={formatDate(today)}
+              onChange={handleDateChange}
+              className="sr-only"
+            />
           </div>
 
           <Button
