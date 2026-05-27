@@ -1124,6 +1124,28 @@ export async function getDashboardData(date: string) {
   }
 }
 
+export async function getCalorieTrendAction(days: number = 14) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      const daysList: { date: string; calories: number; protein: number; carbs: number; fats: number }[] = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+        daysList.push({ date: dateStr, calories: 0, protein: 0, carbs: 0, fats: 0 });
+      }
+      return { days: daysList, goalCalories: 2000 };
+    }
+
+    const { getCalorieTrend } = await import("./lib/dashboard");
+    return getCalorieTrend(userId, days);
+  } catch (error) {
+    console.error("Failed to get calorie trend", error);
+    throw error;
+  }
+}
+
 export async function claimExistingData() {
   try {
     const userId = await getUserId();

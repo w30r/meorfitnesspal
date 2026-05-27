@@ -18,15 +18,15 @@
 
 ---
 
-### Phase 2: Weekly Calorie & Nutrition Trend
+### Phase 2: Weekly Calorie & Nutrition Trend ✅
 
 **Objective**: Add a multi-series AreaChart showing the past 14 days of calorie intake vs. goal, with macro breakdown shown in the tooltip.
 
 **Tasks**:
-- 2.1 — Create Server Action `getWeeklyCalorieTrend(days: number)` returning daily totals (calories, protein, carbs, fats) + goal lines
-- 2.2 — Build `components/charts/CalorieTrendChart.tsx` — AreaChart with gradient fill for calories, dashed goal line, rich tooltip showing macros
-- 2.3 — Integrate into dashboard with proper card container and header
-- 2.4 — Add empty state when no data exists for the selected range
+- ✅ 2.1 — Create `getCalorieTrend(userId, days)` in `dashboard.ts` + `getCalorieTrendAction` server action returning daily totals + goal lines
+- ✅ 2.2 — Build `components/charts/CalorieTrendChart.tsx` — AreaChart with gradient fill, dashed goal line, rich tooltip with macros
+- ✅ 2.3 — Integrate into dashboard with proper card container and header
+- ✅ 2.4 — Add empty state when no data exists for the selected range
 
 ---
 
