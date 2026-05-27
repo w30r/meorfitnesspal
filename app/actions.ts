@@ -1110,7 +1110,9 @@ export async function getDashboardData(date: string) {
         goal: null,
         weeklyWeightAvg: null,
         prevWeekWeightAvg: null,
-        streak: 0,
+        streak: { current: 0, personalBest: 0, last7Days: Array.from({ length: 7 }, () => false), nextMilestone: 7, daysUntilNextMilestone: 7 },
+        achievements: [],
+        newlyUnlockedAchievements: [],
       };
     }
 

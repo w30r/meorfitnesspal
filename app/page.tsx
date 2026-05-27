@@ -7,10 +7,14 @@ import {
   ChevronRight,
   Calendar,
   Weight,
-  Flame,
+  Apple,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KadUtama from "@/components/kadutama";
+import MacroDonutChart from "@/components/charts/MacroDonutChart";
+import AchievementBadges from "@/components/AchievementBadges";
+import StreakCard from "@/components/StreakCard";
 import { cn } from "@/lib/utils";
 import { BsQuestion } from "react-icons/bs";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -18,6 +22,8 @@ import {
   CalorieCardSkeleton,
   MacroCardSkeleton,
   MiniCardSkeleton,
+  DonutCardSkeleton,
+  AchievementsSkeleton,
 } from "@/components/dashboard-skeletons";
 
 export interface FoodEntry {
@@ -94,17 +100,21 @@ export default function Home() {
   const goal = data?.goal ?? null;
   const weeklyWeightAvg = data?.weeklyWeightAvg ?? null;
   const prevWeekWeightAvg = data?.prevWeekWeightAvg ?? null;
-  const streak = data?.streak ?? 0;
+  const streak = data?.streak ?? null;
+  const achievements = data?.achievements ?? [];
+  const newlyUnlocked = data?.newlyUnlockedAchievements ?? [];
 
   const caloriePercentage = goal
     ? Math.round(((foodLog?.totalCalories || 0) / goal.calories) * 100)
     : 0;
 
+  const hasMacros = foodLog && (foodLog.totalProtein > 0 || foodLog.totalCarbs > 0 || foodLog.totalFats > 0);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Date Navigation Header */}
       <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-sm border-b border-border supports-backdrop-filter:bg-background/30">
-        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -162,22 +172,26 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
+      <main className="max-w-7xl mx-auto px-4 pt-4 pb-20">
         {isLoading ? (
-          <>
-            <MiniCardSkeleton />
-            <MiniCardSkeleton />
-            <CalorieCardSkeleton />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
+            <div className="flex gap-3 md:col-span-2 lg:col-span-3">
+              <MiniCardSkeleton className="flex-1" />
+              <MiniCardSkeleton className="flex-1" />
+            </div>
+            <CalorieCardSkeleton className="md:col-span-2" />
             <MacroCardSkeleton />
-          </>
+            <DonutCardSkeleton />
+            <AchievementsSkeleton className="md:col-span-2 lg:col-span-3" />
+          </div>
         ) : (
-          <>
-            {/* Mini Stats Column - This Week's Avg + Streak */}
-            <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
+            {/* Mini stats row */}
+            <div className="flex gap-3 md:col-span-2 lg:col-span-3">
               {/* Weekly Weight Average - Mini */}
-              {weeklyWeightAvg && (
-                <Link href="/weight">
-                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm">
+              {weeklyWeightAvg ? (
+                <Link href="/weight" className="flex-1 min-w-0">
+                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full animate-in fade-in slide-in-from-bottom-1 duration-500">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Weight className="h-4 w-4 text-primary" />
@@ -210,31 +224,32 @@ export default function Home() {
                     </p>
                   </div>
                 </Link>
+              ) : (
+                <Link href="/logweight" className="flex-1 min-w-0">
+                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
+                    <Weight className="h-4 w-4" />
+                    <span className="text-xs font-medium">Log your weight</span>
+                  </div>
+                </Link>
               )}
 
-              {/* Streak - Mini */}
-              {streak > 0 && (
-                <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm mt-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-orange-500" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Current Streak
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-black mt-1">
-                    {streak}
-                    <span className="text-sm font-medium text-muted-foreground ml-1">
-                      day{streak !== 1 ? "s" : ""}
-                    </span>
-                  </p>
+              {/* Streak Card */}
+              {streak && streak.current > 0 ? (
+                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-75 flex">
+                  <StreakCard data={streak} />
                 </div>
+              ) : (
+                <Link href={`/logfood/${formatDate(today)}`} className="flex-1 min-w-0">
+                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
+                    <Apple className="h-4 w-4" />
+                    <span className="text-xs font-medium">Log your first meal</span>
+                  </div>
+                </Link>
               )}
             </div>
 
             {/* Main Calorie Ring/Progress Card */}
-            <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm">
+            <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm md:col-span-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
               <div className="relative z-10 flex flex-col items-center text-center">
                 <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
                   Energy Balance
@@ -299,26 +314,76 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl" />
             </section>
 
             {/* Macros Section */}
-            <section className="w-full">
-              <KadUtama
-                date={formatDate(today)}
-                p={foodLog?.totalProtein || 0}
-                pgoal={goal?.protein || 0}
-                c={foodLog?.totalCarbs || 0}
-                cgoal={goal?.carbs}
-                f={foodLog?.totalFats || 0}
-                fgoal={goal?.fats}
-              />
+            <section className="w-full animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
+              {foodLog ? (
+                <KadUtama
+                  date={formatDate(today)}
+                  p={foodLog?.totalProtein || 0}
+                  pgoal={goal?.protein || 0}
+                  c={foodLog?.totalCarbs || 0}
+                  cgoal={goal?.carbs}
+                  f={foodLog?.totalFats || 0}
+                  fgoal={goal?.fats}
+                />
+              ) : (
+                <Link href={`/logfood/${formatDate(today)}`}>
+                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-6 shadow-sm flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors min-h-[200px]">
+                    <Plus className="h-6 w-6" />
+                    <span className="text-xs font-medium">Log a meal to see macros</span>
+                  </div>
+                </Link>
+              )}
             </section>
-          </>
-        )}
 
-        {/* Spacer for bottom nav */}
-        <div className="h-20" />
+            {/* Macro Distribution Donut */}
+            <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
+              {hasMacros ? (
+                <div className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground text-center mb-2">
+                    Macro Distribution
+                  </h3>
+                  <MacroDonutChart
+                    protein={foodLog!.totalProtein}
+                    proteinGoal={goal?.protein || 0}
+                    carbs={foodLog!.totalCarbs}
+                    carbsGoal={goal?.carbs || 0}
+                    fats={foodLog!.totalFats}
+                    fatsGoal={goal?.fats || 0}
+                  />
+                </div>
+              ) : (
+                <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex flex-col items-center justify-center gap-2 text-muted-foreground min-h-[200px]">
+                  <Apple className="h-6 w-6" />
+                  <span className="text-xs font-medium text-center">No macros logged yet today</span>
+                </div>
+              )}
+            </section>
+
+            {/* Achievements */}
+            <section className="md:col-span-2 lg:col-span-3 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-250">
+              {achievements.length > 0 ? (
+                <div className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                    Achievements
+                  </h3>
+                  <AchievementBadges
+                    achievements={achievements}
+                    newlyUnlocked={newlyUnlocked}
+                  />
+                </div>
+              ) : (
+                <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm flex flex-col items-center justify-center gap-2 text-muted-foreground py-6">
+                  <span className="text-2xl">🏆</span>
+                  <span className="text-xs font-medium">Log meals and build streaks to earn achievements!</span>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </main>
     </div>
   );

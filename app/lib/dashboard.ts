@@ -1,4 +1,6 @@
 import { connectToDatabase } from "./mongodb";
+import { checkAndUnlockAchievements, computeStats, getAchievements } from "./achievements";
+import type { AchievementState } from "./achievements";
 
 export interface FoodEntry {
   _id: string;
@@ -27,12 +29,22 @@ export interface Goal {
   fats: number;
 }
 
+export interface StreakData {
+  current: number
+  personalBest: number
+  last7Days: boolean[]
+  nextMilestone: number
+  daysUntilNextMilestone: number
+}
+
 export interface DashboardData {
   foodLog: FoodLogResponse;
   goal: Goal | null;
   weeklyWeightAvg: number | null;
   prevWeekWeightAvg: number | null;
-  streak: number;
+  streak: StreakData;
+  achievements: AchievementState[];
+  newlyUnlockedAchievements: string[];
 }
 
 export async function fetchDashboardData(
@@ -115,7 +127,10 @@ export async function fetchDashboardData(
       lastWeekEntries.length;
   }
 
-  let streak = 0;
+  const formatDate = (d: Date) =>
+    `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+
+  let currentStreak = 0;
   if (recentDates.length > 0) {
     const uniqueDates = new Set(recentDates.map((l) => l.date));
     const today = new Date();
@@ -123,20 +138,69 @@ export async function fetchDashboardData(
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const formatDate = (d: Date) =>
-      `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
-
     const todayStr = formatDate(today);
     const yesterdayStr = formatDate(yesterday);
 
     if (uniqueDates.has(todayStr) || uniqueDates.has(yesterdayStr)) {
       let checkDate = uniqueDates.has(todayStr) ? today : yesterday;
       while (uniqueDates.has(formatDate(checkDate))) {
-        streak++;
+        currentStreak++;
         checkDate.setDate(checkDate.getDate() - 1);
       }
     }
   }
+
+  // Personal best streak
+  const uniqueDates = new Set(recentDates.map((l) => l.date));
+  let personalBest = 0;
+  if (uniqueDates.size > 0) {
+    const sorted = Array.from(uniqueDates).sort();
+    let run = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1]);
+      const curr = new Date(sorted[i]);
+      const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        run++;
+      } else {
+        personalBest = Math.max(personalBest, run);
+        run = 1;
+      }
+    }
+    personalBest = Math.max(personalBest, run);
+  }
+
+  // Last 7 days activity
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const last7Days: boolean[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    last7Days.push(uniqueDates.has(formatDate(d)));
+  }
+
+  // Next milestone
+  const MILESTONES = [7, 14, 21, 30, 60, 90, 100, 365];
+  let nextMilestone = 7;
+  for (const m of MILESTONES) {
+    if (currentStreak < m) {
+      nextMilestone = m;
+      break;
+    }
+  }
+
+  const streak: StreakData = {
+    current: currentStreak,
+    personalBest: Math.max(personalBest, currentStreak),
+    last7Days,
+    nextMilestone,
+    daysUntilNextMilestone: nextMilestone - currentStreak,
+  };
+
+  const stats = await computeStats(userId, currentStreak);
+  const { achievements, newlyUnlocked } =
+    await checkAndUnlockAchievements(userId, stats);
 
   return {
     foodLog,
@@ -144,5 +208,7 @@ export async function fetchDashboardData(
     weeklyWeightAvg,
     prevWeekWeightAvg,
     streak,
+    achievements,
+    newlyUnlockedAchievements: newlyUnlocked,
   };
 }

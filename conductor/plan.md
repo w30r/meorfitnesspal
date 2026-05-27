@@ -30,14 +30,14 @@
 
 ---
 
-### Phase 3: Macro Distribution Donut
+### Phase 3: Macro Distribution Donut ✅
 
 **Objective**: Visualize the current day's macro split (protein/carbs/fats) as percentages with goal comparison.
 
 **Tasks**:
-- 3.1 — Build `components/charts/MacroDonutChart.tsx` — Recharts PieChart donut showing actual macro grams and % alongside goal targets
-- 3.2 — Integrate into dashboard below the existing KadUtama progress circles
-- 3.3 — Add tooltip showing "Xg / Yg goal" for each macro
+- ✅ 3.1 — Build `components/charts/MacroDonutChart.tsx` — Recharts PieChart donut showing actual macro grams and % alongside goal targets
+- ✅ 3.2 — Integrate into dashboard below the existing KadUtama progress circles
+- ✅ 3.3 — Add tooltip showing "Xg / Yg goal" for each macro
 
 ---
 
@@ -52,40 +52,40 @@
 
 ---
 
-### Phase 5: Achievements & Milestones
+### Phase 5: Achievements & Milestones ✅
 
 **Objective**: Introduce a lightweight achievement system that rewards consistent logging and goal adherence, displayed as badge cards on the dashboard.
 
 **Tasks**:
-- 5.1 — Design achievement catalog (first log, 7d streak, 30d streak, goal hit 7 days straight, first weight log, 10kg milestone, etc.)
-- 5.2 — Create `app/lib/achievements.ts` with `checkAndUnlockAchievements(userId)` and `getAchievements(userId)` Server Actions
-- 5.3 — Store achievements in a new `achievement` MongoDB collection
-- 5.4 — Build `components/AchievementBadges.tsx` — horizontal scrollable row of earned badges + locked previews
-- 5.5 — Integrate into dashboard with celebration animation on new unlocks
+- ✅ 5.1 — Design achievement catalog (first log, 7d streak, 30d streak, goal hit 7 days straight, first weight log, 10kg milestone, etc.)
+- ✅ 5.2 — Create `app/lib/achievements.ts` with `checkAndUnlockAchievements(userId)` and `getAchievements(userId)` Server Actions
+- ✅ 5.3 — Store achievements in a new `achievement` MongoDB collection
+- ✅ 5.4 — Build `components/AchievementBadges.tsx` — horizontal scrollable row of earned badges + locked previews
+- ✅ 5.5 — Integrate into dashboard with celebration animation on new unlocks
 
 ---
 
-### Phase 6: Enhanced Streak & Engagement
+### Phase 6: Enhanced Streak & Engagement ✅
 
 **Objective**: Upgrade the basic streak counter into a more engaging mini-component with streak history, personal best, and next milestone.
 
 **Tasks**:
-- 6.1 — Enhance `getStreak()` to also return personal best streak, weekly activity calendar (last 7 days logged yes/no), and next milestone target
-- 6.2 — Build `components/StreakCard.tsx` — shows current streak with flame icon, a 7-dot mini activity row, and "Next: 14-day streak!" milestone
-- 6.3 — Integrate into dashboard replacing the existing streak display
+- ✅ 6.1 — Enhanced streak computation: `streak` field now returns `StreakData` with current, personalBest, last7Days activity, nextMilestone, daysUntilNextMilestone
+- ✅ 6.2 — Build `components/StreakCard.tsx` — shows current streak with flame icon, 7-dot mini activity row, personal best, and "Next: 14-day streak!" milestone
+- ✅ 6.3 — Integrated into dashboard replacing the existing streak display
 
 ---
 
-### Phase 7: Dashboard Layout Polish & Responsiveness
+### Phase 7: Dashboard Layout Polish & Responsiveness ✅
 
 **Objective**: Ensure the expanded dashboard looks polished on all screen sizes with proper loading, empty, and error states.
 
 **Tasks**:
-- 7.1 — Redesign dashboard grid layout using CSS Grid with responsive breakpoints (1col mobile, 2col tablet, 3col desktop)
-- 7.2 — Add `LoadingSkeleton` component variants for each card type
-- 7.3 — Add `EmptyState` component variant for each chart when no data
-- 7.4 — Add smooth entrance animations using Tailwind `animate-*` utilities
-- 7.5 — Full pass on dark theme contrast and spacing consistency
+- ✅ 7.1 — Redesign dashboard grid layout using CSS Grid with responsive breakpoints (1col mobile, 2col tablet, 3col desktop)
+- ✅ 7.2 — Add `LoadingSkeleton` component variants for each card type
+- ✅ 7.3 — Add `EmptyState` component variant for each chart when no data
+- ✅ 7.4 — Add smooth entrance animations using Tailwind `animate-*` utilities
+- ✅ 7.5 — Full pass on dark theme contrast and spacing consistency
 
 ---
 

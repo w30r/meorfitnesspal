@@ -75,7 +75,7 @@ export default function KadUtama({
   return (
     <div className="group relative overflow-hidden bg-card border border-border p-6 rounded-[2.5rem] shadow-sm transition-all hover:shadow-md">
       {/* Optional decorative background glow */}
-      <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
+      <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors" />
 
       <Link href={`/foodlogs/${date}`} className="relative z-10 block">
         <div className="flex justify-around items-start w-full gap-2">
