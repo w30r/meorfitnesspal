@@ -7,7 +7,9 @@ import { FaPlus } from "react-icons/fa6";
 import { redirect, useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
+  AlertTriangle,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -758,11 +760,25 @@ export default function LogPage() {
                           "Parse with AI"
                         )}
                       </Button>
-                      {aiError && (
-                        <span className="text-xs text-destructive font-medium">
-                          {aiError}
-                        </span>
-                      )}
+                      {aiError ? (
+                        <Alert variant="destructive" className="py-3 px-4">
+                          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                          <div>
+                            <AlertTitle>AI Parse Failed</AlertTitle>
+                            <AlertDescription>{aiError}</AlertDescription>
+                          </div>
+                        </Alert>
+                      ) : aiDone ? (
+                        <Alert variant="success" className="py-3 px-4">
+                          <Check className="h-4 w-4 shrink-0 mt-0.5" />
+                          <div>
+                            <AlertTitle>AI Parse Successful</AlertTitle>
+                            <AlertDescription>
+                              Foods parsed — review and adjust below.
+                            </AlertDescription>
+                          </div>
+                        </Alert>
+                      ) : null}
                     </div>
                   </CardContent>
                 </Card>

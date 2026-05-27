@@ -680,7 +680,12 @@ Meal: "${mealDescription}"`;
   if (!res.ok) {
     const errText = await res.text();
     console.error("Gemini API error:", errText);
-    throw new Error("AI parsing failed. Check API key or try again.");
+    let detail = `Gemini API returned ${res.status}`;
+    try {
+      const errJson = JSON.parse(errText);
+      detail = errJson?.error?.message || detail;
+    } catch {}
+    throw new Error(detail);
   }
 
   const data = await res.json();
@@ -1092,6 +1097,27 @@ export async function getNutritionInsights(days: number = 30): Promise<Nutrition
     };
   } catch (error) {
     console.error("Failed to get nutrition insights", error);
+    throw error;
+  }
+}
+
+export async function getDashboardData(date: string) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return {
+        foodLog: { logs: [], totalCalories: 0, totalCarbs: 0, totalProtein: 0, totalFats: 0 },
+        goal: null,
+        weeklyWeightAvg: null,
+        prevWeekWeightAvg: null,
+        streak: 0,
+      };
+    }
+
+    const { fetchDashboardData } = await import("./lib/dashboard");
+    return fetchDashboardData(userId, date);
+  } catch (error) {
+    console.error("Failed to get dashboard data", error);
     throw error;
   }
 }
