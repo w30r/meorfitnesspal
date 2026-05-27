@@ -183,13 +183,13 @@ export default function Home() {
               <MiniCardSkeleton className="flex-1" />
               <MiniCardSkeleton className="flex-1" />
             </div>
-            <CalorieCardSkeleton className="md:col-span-2" />
-            <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm md:col-span-2 animate-pulse">
+            <CalorieCardSkeleton />
+            <MacroCardSkeleton />
+            <DonutCardSkeleton />
+            <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm md:col-span-2 lg:col-span-3 animate-pulse">
               <div className="h-3 w-32 bg-muted-foreground/20 rounded mb-3" />
               <div className="h-[220px] bg-muted-foreground/10 rounded-lg" />
             </div>
-            <MacroCardSkeleton />
-            <DonutCardSkeleton />
             <AchievementsSkeleton className="md:col-span-2 lg:col-span-3" />
           </div>
         ) : (
@@ -257,7 +257,7 @@ export default function Home() {
             </div>
 
             {/* Main Calorie Ring/Progress Card */}
-            <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm md:col-span-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+            <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
               <div className="relative z-10 flex flex-col items-center text-center">
                 <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
                   Energy Balance
@@ -325,25 +325,6 @@ export default function Home() {
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl" />
             </section>
 
-            {/* Calorie Trend Chart */}
-            <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm md:col-span-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-125">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
-                14-Day Calorie Trend
-              </h3>
-              {trendLoading ? (
-                <div className="h-[220px] flex items-center justify-center">
-                  <div className="h-32 w-full bg-muted/30 rounded-lg animate-pulse" />
-                </div>
-              ) : trendData && trendData.days.some((d) => d.calories > 0) ? (
-                <CalorieTrendChart days={trendData.days} goalCalories={trendData.goalCalories} />
-              ) : (
-                <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                  <span className="text-lg">📊</span>
-                  <span className="text-xs font-medium">No data yet — log meals to see your calorie trend</span>
-                </div>
-              )}
-            </section>
-
             {/* Macros Section */}
             <section className="w-full animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
               {foodLog ? (
@@ -386,6 +367,25 @@ export default function Home() {
                 <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex flex-col items-center justify-center gap-2 text-muted-foreground min-h-[200px]">
                   <Apple className="h-6 w-6" />
                   <span className="text-xs font-medium text-center">No macros logged yet today</span>
+                </div>
+              )}
+            </section>
+
+            {/* Calorie Trend Chart */}
+            <section className="relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-4 shadow-sm md:col-span-2 lg:col-span-3 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-125">
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                14-Day Calorie Trend
+              </h3>
+              {trendLoading ? (
+                <div className="h-[220px] flex items-center justify-center">
+                  <div className="h-32 w-full bg-muted/30 rounded-lg animate-pulse" />
+                </div>
+              ) : trendData && trendData.days.some((d) => d.calories > 0) ? (
+                <CalorieTrendChart days={trendData.days} goalCalories={trendData.goalCalories} />
+              ) : (
+                <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <span className="text-lg">📊</span>
+                  <span className="text-xs font-medium">No data yet — log meals to see your calorie trend</span>
                 </div>
               )}
             </section>
