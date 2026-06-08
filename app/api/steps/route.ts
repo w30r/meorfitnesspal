@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `User '${username}' not found` }, { status: 404 });
     }
 
-    const userId = (user as any).id;
+    const userId = (user as any)._id.toString();
 
     let upsertedCount = 0;
     for (const entry of steps) {
