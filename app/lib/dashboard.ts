@@ -42,6 +42,7 @@ export interface DashboardData {
   goal: Goal | null;
   weeklyWeightAvg: number | null;
   prevWeekWeightAvg: number | null;
+  steps: number | null;
   streak: StreakData;
   achievements: AchievementState[];
   newlyUnlockedAchievements: string[];
@@ -55,7 +56,7 @@ export async function fetchDashboardData(
 
   const foodCollection = db.collection("foodlog");
 
-  const [foodLogs, goalData, weightLogs, recentDates] = await Promise.all([
+  const [foodLogs, goalData, weightLogs, recentDates, stepsEntry] = await Promise.all([
     foodCollection.find({ date, userId }).toArray(),
     db.collection("goal").findOne({ userId }),
     db
@@ -69,6 +70,7 @@ export async function fetchDashboardData(
       .limit(100)
       .project({ date: 1, _id: 0 })
       .toArray() as Promise<{ date: string }[]>,
+    db.collection("stepslog").findOne({ userId, date }),
   ]);
 
   const totals = (foodLogs as any[]).reduce(
@@ -207,6 +209,7 @@ export async function fetchDashboardData(
     goal,
     weeklyWeightAvg,
     prevWeekWeightAvg,
+    steps: (stepsEntry as any)?.steps ?? null,
     streak,
     achievements,
     newlyUnlockedAchievements: newlyUnlocked,

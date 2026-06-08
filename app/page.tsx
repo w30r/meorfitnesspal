@@ -9,6 +9,7 @@ import {
   Weight,
   Apple,
   Plus,
+  Footprints,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KadUtama from "@/components/kadutama";
@@ -104,6 +105,7 @@ export default function Home() {
   const goal = data?.goal ?? null;
   const weeklyWeightAvg = data?.weeklyWeightAvg ?? null;
   const prevWeekWeightAvg = data?.prevWeekWeightAvg ?? null;
+  const steps = data?.steps ?? null;
   const streak = data?.streak ?? null;
   const achievements = data?.achievements ?? [];
   const newlyUnlocked = data?.newlyUnlockedAchievements ?? [];
@@ -182,6 +184,7 @@ export default function Home() {
             <div className="flex gap-3 md:col-span-2 lg:col-span-3">
               <MiniCardSkeleton className="flex-1" />
               <MiniCardSkeleton className="flex-1" />
+              <MiniCardSkeleton className="flex-1" />
             </div>
             <CalorieCardSkeleton />
             <MacroCardSkeleton />
@@ -240,6 +243,23 @@ export default function Home() {
                   </div>
                 </Link>
               )}
+
+              {/* Steps Card */}
+              {steps ? (
+                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[25ms]">
+                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Footprints className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Steps
+                      </span>
+                    </div>
+                    <p className="text-2xl font-black">
+                      {steps.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
 
               {/* Streak Card */}
               {streak && streak.current > 0 ? (
