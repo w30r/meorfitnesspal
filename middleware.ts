@@ -13,7 +13,7 @@ export default async function middleware(request: NextRequest) {
     request.nextUrl.pathname === "/signin" ||
     request.nextUrl.pathname === "/signup";
   const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth") ||
-    request.nextUrl.pathname.startsWith("/api/steps");
+    request.nextUrl.pathname.startsWith("/api/activity");
 
   // 1. If not logged in and trying to access protected route
   if (!isAuthenticated && !isAuthRoute && !isAuthApi) {

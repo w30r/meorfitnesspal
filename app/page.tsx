@@ -10,6 +10,7 @@ import {
   Apple,
   Plus,
   Footprints,
+  Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import KadUtama from "@/components/kadutama";
@@ -106,6 +107,8 @@ export default function Home() {
   const weeklyWeightAvg = data?.weeklyWeightAvg ?? null;
   const prevWeekWeightAvg = data?.prevWeekWeightAvg ?? null;
   const steps = data?.steps ?? null;
+  const activeEnergy = data?.activeEnergy ?? null;
+  const restingEnergy = data?.restingEnergy ?? null;
   const streak = data?.streak ?? null;
   const achievements = data?.achievements ?? [];
   const newlyUnlocked = data?.newlyUnlockedAchievements ?? [];
@@ -256,6 +259,23 @@ export default function Home() {
                     </div>
                     <p className="text-2xl font-black">
                       {steps.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Est. kcal Burned */}
+              {(activeEnergy || restingEnergy) ? (
+                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[50ms]">
+                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Flame className="h-4 w-4 text-orange-500" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Est. kcal Burned
+                      </span>
+                    </div>
+                    <p className="text-2xl font-black">
+                      {((activeEnergy || 0) + (restingEnergy || 0)).toLocaleString()}
                     </p>
                   </div>
                 </div>
