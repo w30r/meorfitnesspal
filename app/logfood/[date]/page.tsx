@@ -683,7 +683,7 @@ export default function LogPage() {
               <p className="text-sm text-muted-foreground mb-4 text-center">
                 Which meal are you logging for?
               </p>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[
                   { value: "Breakfast", label: "Breakfast", icon: "🌅" },
                   { value: "Lunch", label: "Lunch", icon: "☀️" },
@@ -696,7 +696,7 @@ export default function LogPage() {
                     variant={
                       formData.meal === meal.value ? "default" : "outline"
                     }
-                    className={`flex-1 rounded-xl font-medium h-20 flex-col gap-1 ${
+                    className={`h-auto aspect-square rounded-xl font-medium flex-col gap-1 ${
                       formData.meal === meal.value ? "ring-2 ring-primary" : ""
                     }`}
                     onClick={() =>

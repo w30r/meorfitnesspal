@@ -184,10 +184,11 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 pt-4 pb-20">
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
-            <div className="flex gap-3 md:col-span-2 lg:col-span-3">
-              <MiniCardSkeleton className="flex-1" />
-              <MiniCardSkeleton className="flex-1" />
-              <MiniCardSkeleton className="flex-1" />
+            <div className="flex gap-3 overflow-x-auto no-scrollbar md:col-span-2 lg:col-span-3">
+              <MiniCardSkeleton className="flex-shrink-0 w-44 aspect-square" />
+              <MiniCardSkeleton className="flex-shrink-0 w-44 aspect-square" />
+              <MiniCardSkeleton className="flex-shrink-0 w-44 aspect-square" />
+              <MiniCardSkeleton className="flex-shrink-0 w-44 aspect-square" />
             </div>
             <CalorieCardSkeleton />
             <MacroCardSkeleton />
@@ -201,11 +202,11 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
             {/* Mini stats row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:col-span-2 lg:col-span-3">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar md:col-span-2 lg:col-span-3">
               {/* Weekly Weight Average - Mini */}
               {weeklyWeightAvg ? (
-                <Link href="/weight">
-                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full animate-in fade-in slide-in-from-bottom-1 duration-500">
+                <Link href="/weight" className="flex-shrink-0 w-44">
+                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm aspect-square animate-in fade-in slide-in-from-bottom-1 duration-500 flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Weight className="h-4 w-4 text-primary" />
@@ -230,17 +231,19 @@ export default function Home() {
                         </p>
                       )}
                     </div>
-                    <p className="text-2xl font-black mt-1">
-                      {weeklyWeightAvg.toFixed(1)}
-                      <span className="text-sm font-medium text-muted-foreground ml-1">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black tabular-nums">
+                        {weeklyWeightAvg.toFixed(1)}
+                      </span>
+                      <span className="text-sm font-medium text-muted-foreground">
                         kg
                       </span>
-                    </p>
+                    </div>
                   </div>
                 </Link>
               ) : (
-                <Link href="/logweight">
-                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
+                <Link href="/logweight" className="flex-shrink-0 w-44">
+                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm aspect-square flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
                     <Weight className="h-4 w-4" />
                     <span className="text-xs font-medium">Log your weight</span>
                   </div>
@@ -249,46 +252,51 @@ export default function Home() {
 
               {/* Steps Card */}
               {steps ? (
-                <div className="animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[25ms]">
-                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
-                    <div className="flex items-center gap-2 mb-1">
+                <div className="flex-shrink-0 w-44 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[25ms]">
+                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm aspect-square flex flex-col justify-between">
+                    <div className="flex items-center gap-2">
                       <Footprints className="h-4 w-4 text-primary" />
                       <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Steps
                       </span>
                     </div>
-                    <p className="text-2xl font-black">
+                    <p className="text-4xl font-black tabular-nums">
                       {steps.toLocaleString()}
                     </p>
                   </div>
                 </div>
               ) : null}
 
-              {/* Est. kcal Burned */}
+              {/* Calorie */}
               {(activeEnergy || restingEnergy) ? (
-                <div className="animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[50ms]">
-                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
-                    <div className="flex items-center gap-2 mb-1">
+                <div className="flex-shrink-0 w-44 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[50ms]">
+                  <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm aspect-square flex flex-col justify-between">
+                    <div className="flex items-center gap-2">
                       <Flame className="h-4 w-4 text-orange-500" />
                       <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Est. kcal Burned
+                        Calorie
                       </span>
                     </div>
-                    <p className="text-2xl font-black">
-                      {((activeEnergy || 0) + (restingEnergy || 0)).toLocaleString()}
-                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black tabular-nums">
+                        {((activeEnergy || 0) + (restingEnergy || 0)).toFixed(0)}
+                      </span>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        kcal
+                      </span>
+                    </div>
                   </div>
                 </div>
               ) : null}
 
               {/* Streak Card */}
               {streak && streak.current > 0 ? (
-                <div className="animate-in fade-in slide-in-from-bottom-1 duration-500 delay-75 flex">
+                <div className="flex-shrink-0 w-44 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-75">
                   <StreakCard data={streak} />
                 </div>
               ) : (
-                <Link href={`/logfood/${formatDate(today)}`}>
-                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
+                <Link href={`/logfood/${formatDate(today)}`} className="flex-shrink-0 w-44">
+                  <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm aspect-square flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
                     <Apple className="h-4 w-4" />
                     <span className="text-xs font-medium">Log your first meal</span>
                   </div>

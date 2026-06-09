@@ -24,7 +24,7 @@ export default function StreakCard({ data }: StreakCardProps) {
   const showMilestone = daysUntilNextMilestone > 0 && daysUntilNextMilestone <= 7
 
   return (
-    <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
+    <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full aspect-square">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Flame className="h-5 w-5 text-orange-500" />
