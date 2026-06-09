@@ -201,10 +201,10 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min">
             {/* Mini stats row */}
-            <div className="flex gap-3 md:col-span-2 lg:col-span-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:col-span-2 lg:col-span-3">
               {/* Weekly Weight Average - Mini */}
               {weeklyWeightAvg ? (
-                <Link href="/weight" className="flex-1 min-w-0">
+                <Link href="/weight">
                   <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full animate-in fade-in slide-in-from-bottom-1 duration-500">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ export default function Home() {
                   </div>
                 </Link>
               ) : (
-                <Link href="/logweight" className="flex-1 min-w-0">
+                <Link href="/logweight">
                   <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
                     <Weight className="h-4 w-4" />
                     <span className="text-xs font-medium">Log your weight</span>
@@ -249,7 +249,7 @@ export default function Home() {
 
               {/* Steps Card */}
               {steps ? (
-                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[25ms]">
+                <div className="animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[25ms]">
                   <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
                     <div className="flex items-center gap-2 mb-1">
                       <Footprints className="h-4 w-4 text-primary" />
@@ -266,7 +266,7 @@ export default function Home() {
 
               {/* Est. kcal Burned */}
               {(activeEnergy || restingEnergy) ? (
-                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[50ms]">
+                <div className="animate-in fade-in slide-in-from-bottom-1 duration-500 delay-[50ms]">
                   <div className="bg-card border border-border rounded-[2.5rem] p-4 shadow-sm h-full">
                     <div className="flex items-center gap-2 mb-1">
                       <Flame className="h-4 w-4 text-orange-500" />
@@ -283,11 +283,11 @@ export default function Home() {
 
               {/* Streak Card */}
               {streak && streak.current > 0 ? (
-                <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-bottom-1 duration-500 delay-75 flex">
+                <div className="animate-in fade-in slide-in-from-bottom-1 duration-500 delay-75 flex">
                   <StreakCard data={streak} />
                 </div>
               ) : (
-                <Link href={`/logfood/${formatDate(today)}`} className="flex-1 min-w-0">
+                <Link href={`/logfood/${formatDate(today)}`}>
                   <div className="bg-card border border-dashed border-border/50 rounded-[2.5rem] p-4 shadow-sm h-full flex items-center justify-center gap-2 text-muted-foreground hover:border-border transition-colors">
                     <Apple className="h-4 w-4" />
                     <span className="text-xs font-medium">Log your first meal</span>

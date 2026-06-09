@@ -12,11 +12,7 @@ export function useDashboard(date: string) {
 
   useEffect(() => {
     abortRef.current = false;
-    const isInitial = data === null;
-
-    if (isInitial) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
 
     getDashboardData(date)
       .then((result) => {
