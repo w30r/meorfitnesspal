@@ -16,7 +16,6 @@ export function useCalorieTrend(): UseCalorieTrendResult {
 
   useEffect(() => {
     abortRef.current = false
-    setIsLoading(true)
 
     getCalorieTrendAction(14).then((result) => {
       if (!abortRef.current) {

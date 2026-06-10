@@ -281,14 +281,29 @@ const foodEmojiMap: Record<string, string> = {
   sugar: "🍭",
 };
 
+const foodEmojiEntries = Object.entries(foodEmojiMap);
+
 const addEmoji = (foodName: string): string => {
   const lower = foodName.toLowerCase();
-  for (const keyword of Object.keys(foodEmojiMap)) {
+  for (const [keyword, emoji] of foodEmojiEntries) {
     if (lower.includes(keyword)) {
-      return `${foodEmojiMap[keyword]} ${foodName}`;
+      return `${emoji} ${foodName}`;
     }
   }
   return `🍽️ ${foodName}`;
+};
+
+const parsePaste = (text: string) => {
+  const find = (key: string) => {
+    const m = text.match(new RegExp(`"${key}"\\s*:\\s*([\\d.]+)`, "i"));
+    return m ? parseFloat(m[1]) : 0;
+  };
+  return {
+    calories: find("calories"),
+    carbs: find("carbs"),
+    protein: find("protein"),
+    fats: find("fats"),
+  };
 };
 
 export default function LogPage() {
@@ -344,19 +359,6 @@ export default function LogPage() {
       },
     );
   }, []);
-
-  const parsePaste = (text: string) => {
-    const find = (key: string) => {
-      const m = text.match(new RegExp(`"${key}"\\s*:\\s*([\\d.]+)`, "i"));
-      return m ? parseFloat(m[1]) : 0;
-    };
-    return {
-      calories: find("calories"),
-      carbs: find("carbs"),
-      protein: find("protein"),
-      fats: find("fats"),
-    };
-  };
 
   const handleAIParse = async () => {
     if (!aiInput.trim()) return;
@@ -545,13 +547,18 @@ export default function LogPage() {
     if (valid.length === 0) return alert("Add at least one food");
     setIsSubmitting(true);
     try {
-      for (const food of valid) {
-        await saveFoodLog({
-          ...food,
-          foodName: addEmoji(food.foodName),
-          date: formData.date,
-          meal: formData.meal,
-        });
+      const results = await Promise.allSettled(
+        valid.map((food) =>
+          saveFoodLog({
+            ...food,
+            foodName: addEmoji(food.foodName),
+            date: formData.date,
+            meal: formData.meal,
+          })
+        ),
+      );
+      if (results.every((r) => r.status === "rejected")) {
+        throw new Error();
       }
       router.push("/");
     } catch {
@@ -570,6 +577,8 @@ export default function LogPage() {
     { cal: 0, carb: 0, pro: 0, fat: 0 },
   );
 
+  const validFoods = foods.filter((f) => f.foodName && f.calories > 0);
+
   const steps = [
     { num: 1, label: "Meal" },
     { num: 2, label: "Food" },
@@ -583,7 +592,7 @@ export default function LogPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => (step === 1 ? redirect("/") : setStep(step - 1))}
+            onClick={() => (step === 1 ? redirect("/") : setStep((prev) => prev - 1))}
             className="h-10 w-10 rounded-full hover:bg-primary/10"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -886,11 +895,8 @@ export default function LogPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  {foods.filter((f) => f.foodName && f.calories > 0).length >
-                  0 ? (
-                    foods
-                      .filter((f) => f.foodName && f.calories > 0)
-                      .map((food) => (
+                  {validFoods.length > 0
+                    ? validFoods.map((food) => (
                         <div
                           key={food.id}
                           className="flex items-center justify-between bg-muted/30 rounded-xl p-3"
@@ -915,7 +921,7 @@ export default function LogPage() {
                           </div>
                         </div>
                       ))
-                  ) : (
+                  : (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No foods added yet. Go back and add some food.
                     </p>
@@ -961,14 +967,12 @@ export default function LogPage() {
                   className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20"
                   disabled={isSubmitting}
                 >
-                  <FaPlus className="mr-2" /> Log{" "}
-                  {foods.filter((f) => f.foodName && f.calories > 0).length ||
-                    0}{" "}
-                  Food
-                  {foods.filter((f) => f.foodName && f.calories > 0).length !==
-                  1
-                    ? "s"
-                    : ""}
+                   <FaPlus className="mr-2" /> Log{" "}
+                   {validFoods.length || 0}{" "}
+                   Food
+                   {validFoods.length !== 1
+                     ? "s"
+                     : ""}
                 </Button>
               </form>
             </CardContent>

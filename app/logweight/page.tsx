@@ -3,28 +3,28 @@ import { upsertWeight } from "@/app/actions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export default function LogWeightPage() {
-  /**
-   * Inline Server Action
-   * This handles the form submission directly on the server.
-   */
-  async function handleAction(formData: FormData) {
-    "use server";
-    const weight = parseFloat(formData.get("weight") as string);
-    const date = formData.get("date") as string;
+/**
+ * Server Action
+ * Handles the form submission directly on the server.
+ */
+async function handleAction(formData: FormData) {
+  "use server";
+  const weight = parseFloat(formData.get("weight") as string);
+  const date = formData.get("date") as string;
 
-    if (weight && date) {
-      // Ensure date is in DD-MM-YYYY for our database consistency
-      const [y, m, d] = date.split("-");
-      const formattedDate = `${d}-${m}-${y}`;
+  if (weight && date) {
+    // Ensure date is in DD-MM-YYYY for our database consistency
+    const [y, m, d] = date.split("-");
+    const formattedDate = `${d}-${m}-${y}`;
 
-      await upsertWeight(weight, formattedDate);
+    await upsertWeight(weight, formattedDate);
 
-      // Redirect back to the weight graph page
-      redirect("/weight");
-    }
+    // Redirect back to the weight graph page
+    redirect("/weight");
   }
+}
 
+export default function LogWeightPage() {
   // Set default value for the date picker to today (YYYY-MM-DD format)
   const today = new Date().toISOString().split("T")[0];
 

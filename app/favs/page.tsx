@@ -59,6 +59,10 @@ const initialForm: FormData = {
   fats: "",
 };
 
+const capitalizeWords = (str: string): string => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 export default function FavsPage() {
   const [customFavs, setCustomFavs] = useState<FavoriteFood[]>([]);
   const [markedFavs, setMarkedFavs] = useState<MarkedFavorite[]>([]);
@@ -137,10 +141,6 @@ export default function FavsPage() {
   const handleToggleMarked = async (id: string) => {
     await toggleFavorite(id);
     fetchFavs();
-  };
-
-  const capitalizeWords = (str: string): string => {
-    return str.replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
   if (loading) {

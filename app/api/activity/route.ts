@@ -43,6 +43,8 @@ export async function POST(request: Request) {
     let stepsCount = 0;
     let energyCount = 0;
 
+    const updates: Promise<any>[] = [];
+
     for (const entry of entries) {
       const date = entry.Date;
 
@@ -50,10 +52,12 @@ export async function POST(request: Request) {
         if (typeof entry.Steps !== "number") {
           return NextResponse.json({ error: "'Steps' must be a number" }, { status: 400 });
         }
-        await db.collection("stepslog").updateOne(
-          { userId, date },
-          { $set: { steps: entry.Steps, date, userId, updatedAt: new Date() } },
-          { upsert: true },
+        updates.push(
+          db.collection("stepslog").updateOne(
+            { userId, date },
+            { $set: { steps: entry.Steps, date, userId, updatedAt: new Date() } },
+            { upsert: true },
+          ),
         );
         stepsCount++;
       }
@@ -62,17 +66,21 @@ export async function POST(request: Request) {
         const activeEnergy = typeof entry.ActiveEnergy === "number" ? entry.ActiveEnergy : 0;
         const restingEnergy = typeof entry.RestingEnergy === "number" ? entry.RestingEnergy : 0;
 
-        await db.collection("energylog").updateOne(
-          { userId, date },
-          {
-            $set: { activeEnergy, restingEnergy, date, userId, updatedAt: new Date() },
-            $setOnInsert: {},
-          },
-          { upsert: true },
+        updates.push(
+          db.collection("energylog").updateOne(
+            { userId, date },
+            {
+              $set: { activeEnergy, restingEnergy, date, userId, updatedAt: new Date() },
+              $setOnInsert: {},
+            },
+            { upsert: true },
+          ),
         );
         energyCount++;
       }
     }
+
+    await Promise.all(updates);
 
     return NextResponse.json({ success: true, stepsCount, energyCount }, { status: 201 });
   } catch (error) {

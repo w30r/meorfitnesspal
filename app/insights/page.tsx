@@ -19,17 +19,32 @@ interface DailyStats {
 const fillMissingDays = (data: DailyStats[], days: number) => {
   const fullData: DailyStats[] = [];
   const now = new Date();
+  const dataMap = new Map(data.map((item) => [item.date, item]));
   for (let i = 0; i < days; i++) {
     const d = new Date();
     d.setDate(now.getDate() - i);
     const dateStr = d.toISOString().split("T")[0];
-    const existingDay = data.find((item) => item.date === dateStr);
+    const existingDay = dataMap.get(dateStr);
     fullData.push(existingDay || { date: dateStr, totalCalories: 0, totalCarbs: 0, totalProtein: 0, totalFats: 0, logCount: 0 });
   }
   return fullData;
 };
 
 const PERIODS = [7, 14, 30, 90];
+
+const formatDay = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+};
+
+const getHeatClass = (calories: number, goal: number) => {
+  if (calories === 0) return "bg-muted/10 text-muted-foreground/40";
+  const ratio = calories / goal;
+  if (ratio < 0.3) return "bg-primary/10 text-primary";
+  if (ratio < 0.6) return "bg-primary/30 text-primary";
+  if (ratio < 0.9) return "bg-primary/60 text-primary-foreground";
+  return "bg-primary text-primary-foreground font-black shadow-inner";
+};
 
 function MacroBar({ label, value, goal, color, unit }: { label: string; value: number; goal: number; color: string; unit: string }) {
   const pct = goal > 0 ? Math.min(Math.round((value / goal) * 100), 100) : 0;
@@ -89,11 +104,6 @@ export default function InsightsPage() {
     getGoalData().then((res) => setCalorieGoal(res[0]?.calories || 1499)).catch(() => {});
   }, []);
 
-  const formatDay = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
-  };
-
   const activeDays = foodLogs.filter((d) => d.logCount > 0);
   const avgCalories = activeDays.length
     ? Math.round(activeDays.reduce((acc, curr) => acc + curr.totalCalories, 0) / activeDays.length)
@@ -123,15 +133,6 @@ export default function InsightsPage() {
     };
     fetchData();
   }, [days]);
-
-  const getHeatClass = (calories: number, goal: number) => {
-    if (calories === 0) return "bg-muted/10 text-muted-foreground/40";
-    const ratio = calories / goal;
-    if (ratio < 0.3) return "bg-primary/10 text-primary";
-    if (ratio < 0.6) return "bg-primary/30 text-primary";
-    if (ratio < 0.9) return "bg-primary/60 text-primary-foreground";
-    return "bg-primary text-primary-foreground font-black shadow-inner";
-  };
 
   if (loading) {
     return (
@@ -372,7 +373,7 @@ export default function InsightsPage() {
                     ) : (
                       <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                     )}
-                    <span dangerouslySetInnerHTML={{ __html: rec }} />
+                    <span>{rec}</span>
                   </div>
                 ))}
               </div>

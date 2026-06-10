@@ -250,13 +250,14 @@ export async function getCalorieTrend(
   const startStr = formatDate(startDate);
   const endStr = formatDate(endDate);
 
-  const logs = await db
-    .collection("foodlog")
-    .find({ userId, date: { $gte: startStr, $lte: endStr } })
-    .sort({ date: 1 })
-    .toArray();
-
-  const goal = await db.collection("goal").findOne({ userId });
+  const [logs, goal] = await Promise.all([
+    db
+      .collection("foodlog")
+      .find({ userId, date: { $gte: startStr, $lte: endStr } })
+      .sort({ date: 1 })
+      .toArray(),
+    db.collection("goal").findOne({ userId }),
+  ]);
 
   const dayMap = new Map<string, CalorieTrendDay>();
 

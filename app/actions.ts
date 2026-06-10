@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { connectToDatabase } from "./lib/mongodb";
 import { getUserId } from "./lib/session";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 export interface FoodEntry {
   _id: string;
@@ -511,8 +512,10 @@ export async function getCombinedWeightAndCals() {
   
   const db = await connectToDatabase("meorfitnesspal");
 
-  const weightLogs = await db.collection("weightlog").find({ userId }).toArray();
-  const foodLogs = await db.collection("foodlog").find({ userId }).toArray();
+  const [weightLogs, foodLogs] = await Promise.all([
+    db.collection("weightlog").find({ userId }).toArray(),
+    db.collection("foodlog").find({ userId }).toArray(),
+  ]);
 
   // Build daily calories from foodLogs
   const dailyCalories: Record<string, number> = {};
@@ -951,16 +954,21 @@ export async function getNutritionInsights(days: number = 30): Promise<Nutrition
     const minCalories = Math.min(...calorieValues);
     const maxCalories = Math.max(...calorieValues);
 
-    const mealAverages = Object.entries(mealData)
-      .filter(([_, data]) => data.count > 0)
-      .map(([meal, data]) => ({
-        meal,
-        avgCalories: Math.round(data.calories / data.count),
-        avgProtein: Math.round(data.protein / data.count),
-        avgCarbs: Math.round(data.carbs / data.count),
-        avgFats: Math.round(data.fats / data.count),
-        count: data.count,
-      }));
+    const mealAverages = Object.entries(mealData).reduce<
+      { meal: string; avgCalories: number; avgProtein: number; avgCarbs: number; avgFats: number; count: number }[]
+    >((acc, [meal, data]) => {
+      if (data.count > 0) {
+        acc.push({
+          meal,
+          avgCalories: Math.round(data.calories / data.count),
+          avgProtein: Math.round(data.protein / data.count),
+          avgCarbs: Math.round(data.carbs / data.count),
+          avgFats: Math.round(data.fats / data.count),
+          count: data.count,
+        });
+      }
+      return acc;
+    }, []);
 
     // TDEE: filter weight logs within period
     const parseWeightDate = (dateStr: string) => {
@@ -1160,22 +1168,24 @@ export async function claimExistingData() {
     const weightlogCollection = db.collection("weightlog");
     const goalCollection = db.collection("goal");
     
-    const foodlogResult = await foodlogCollection.updateMany(
-      { userId: { $exists: false } },
-      { $set: { userId } }
-    );
+    const [foodlogResult, weightlogResult, goalResult] = await Promise.all([
+      foodlogCollection.updateMany(
+        { userId: { $exists: false } },
+        { $set: { userId } }
+      ),
+      weightlogCollection.updateMany(
+        { userId: { $exists: false } },
+        { $set: { userId } }
+      ),
+      goalCollection.updateMany(
+        { userId: { $exists: false } },
+        { $set: { userId } }
+      ),
+    ]);
     
-    const weightlogResult = await weightlogCollection.updateMany(
-      { userId: { $exists: false } },
-      { $set: { userId } }
-    );
-    
-    const goalResult = await goalCollection.updateMany(
-      { userId: { $exists: false } },
-      { $set: { userId } }
-    );
-    
-    console.log(`Claimed ${foodlogResult.modifiedCount} foodlog, ${weightlogResult.modifiedCount} weightlog, ${goalResult.modifiedCount} goal entries`);
+    after(() => {
+      console.log(`Claimed ${foodlogResult.modifiedCount} foodlog, ${weightlogResult.modifiedCount} weightlog, ${goalResult.modifiedCount} goal entries`);
+    });
     
     return {
       success: true,

@@ -4,32 +4,20 @@ import { Button } from "@/components/ui/button"; // Adjust paths as needed
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+function addOneDay(d: string) {
+  const date = new Date(d);
+  date.setDate(date.getDate() + 1);
+  return date.toISOString().split("T")[0];
+}
+
+function minusOneDay(d: string) {
+  const date = new Date(d);
+  date.setDate(date.getDate() - 1);
+  return date.toISOString().split("T")[0];
+}
+
 export default function DateNavigation({ date }: { date: string }) {
   const router = useRouter();
-
-  // Utility functions (assuming you have these or can define them here)
-
-  function addOneDay(d: string) {
-    // Create a new Date object from the input string
-    const date = new Date(d);
-
-    // Add 1 day to the current date
-    date.setDate(date.getDate() + 1);
-
-    // Format back to YYYY-MM-DD
-    return date.toISOString().split("T")[0];
-  }
-
-  function minusOneDay(d: string) {
-    // Create a new Date object from the input string
-    const date = new Date(d);
-
-    // Subtract 1 day from the current date
-    date.setDate(date.getDate() - 1);
-
-    // Format back to YYYY-MM-DD
-    return date.toISOString().split("T")[0];
-  }
 
   return (
     <div className="flex gap-1">

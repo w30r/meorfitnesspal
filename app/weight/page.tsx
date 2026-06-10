@@ -57,7 +57,7 @@ export default function WeightPage() {
     if (data.length === 0) return [];
     
     const weeks: WeeklyData[] = [];
-    const sortedData = [...data].sort((a, b) => {
+    const sortedData = data.toSorted((a, b) => {
       const pa = a.date.split("-");
       const pb = b.date.split("-");
       const dateA = new Date(Number(pa[2]), Number(pa[1]) - 1, Number(pa[0]));
