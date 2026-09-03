@@ -3,12 +3,16 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { username } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI || "";
-const client = new MongoClient(uri);
-const db = client.db("meorfitnesspal");
+let _auth: any;
 
-export const auth = betterAuth({
-  database: mongodbAdapter(db),
+export function getAuth() {
+  if (!_auth) {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) throw new Error("MONGODB_URI is not defined");
+    const client = new MongoClient(uri);
+    const db = client.db("meorfitnesspal");
+    _auth = betterAuth({
+      database: mongodbAdapter(db),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -36,5 +40,8 @@ export const auth = betterAuth({
     },
   },
 });
+  }
+  return _auth;
+}
 
-export type Session = typeof auth.$Infer.Session.session;
+export type Session = typeof _auth.$Infer.Session.session;

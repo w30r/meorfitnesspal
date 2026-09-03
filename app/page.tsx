@@ -70,7 +70,7 @@ function formatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export function formatShortDate(dateStr: string) {
+function formatShortDate(dateStr: string) {
   const [year, month, day] = dateStr.split("-");
   const months = [
     "Jan",

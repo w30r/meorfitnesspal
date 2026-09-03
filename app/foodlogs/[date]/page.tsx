@@ -21,7 +21,7 @@ interface FoodLog {
   isFavorite?: boolean;
 }
 
-export function formatShortDate(dateStr: string) {
+function formatShortDate(dateStr: string) {
   const [year, month, day] = dateStr.split("-");
   const months = [
     "Jan",
@@ -42,7 +42,7 @@ export function formatShortDate(dateStr: string) {
 
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export function getDayName(dateStr: string) {
+function getDayName(dateStr: string) {
   const [year, month, day] = dateStr.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   return dayNames[date.getDay()];

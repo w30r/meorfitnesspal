@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI;
 const apiKey = process.env.STEPS_API_KEY;
 
-if (!uri) {
-  throw new Error("MONGODB_URI is not defined");
-}
+let client: MongoClient;
 
-const client = new MongoClient(uri);
+function getClient(): MongoClient {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI is not defined");
+  }
+  if (!client) {
+    client = new MongoClient(uri);
+  }
+  return client;
+}
 
 export async function POST(request: Request) {
   try {
@@ -30,8 +36,8 @@ export async function POST(request: Request) {
       }
     }
 
-    await client.connect();
-    const db = client.db("meorfitnesspal");
+    await getClient().connect();
+    const db = getClient().db("meorfitnesspal");
 
     const user = await db.collection("user").findOne({ username });
     if (!user) {

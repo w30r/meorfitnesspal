@@ -1,9 +1,9 @@
-import { auth } from "./auth";
+import { getAuth } from "./auth";
 import { cookies } from "next/headers";
 
 export async function getSession() {
   const cookieStore = await cookies();
-  const session = await auth.api.getSession({
+  const session = await getAuth().api.getSession({
     headers: {
       cookie: cookieStore.toString(),
     },

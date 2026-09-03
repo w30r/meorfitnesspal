@@ -1,21 +1,23 @@
 import { MongoClient } from "mongodb";
 
-// MongoDB URI from .env file
-const uri = process.env.MONGODB_URI;
+let client: MongoClient;
 
-if (!uri) {
-  throw new Error("MONGODB_URI is not defined in the .env file");
+function getClient(): MongoClient {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI is not defined in the .env file");
+  }
+  if (!client) {
+    client = new MongoClient(uri);
+  }
+  return client;
 }
 
-// Create a MongoClient instance
-const client = new MongoClient(uri);
-
-// Function to connect to MongoDB
 export async function connectToDatabase(dbname: string) {
   try {
-    await client.connect();
-    // console.log("Connected to MongoDB");
-    return client.db(dbname);
+    const dbClient = getClient();
+    await dbClient.connect();
+    return dbClient.db(dbname);
   } catch (error) {
     console.error("Failed to connect to MongoDB", error);
     throw error;

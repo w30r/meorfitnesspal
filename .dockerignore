@@ -1,0 +1,14 @@
+.git
+.next
+node_modules
+npm-debug.log*
+.env
+.env.*
+Dockerfile
+docker-compose*
+.dockerignore
+README.md
+AGENTS.md
+*.md
+.vercel
+.vercel*
